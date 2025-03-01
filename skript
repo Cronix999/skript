@@ -1,8 +1,5 @@
 -- Load required libraries
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local AimbotScript = loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/Aimbot-V2/main/Resources/Scripts/Raw%20Main.lua"))()
-
--- ESP Fix: Load the ESP library
 local ESP = loadstring(game:HttpGet("https://kiriot22.com/releases/ESP.lua"))()
 ESP:Toggle(false)
 ESP.Boxes = false
@@ -12,14 +9,13 @@ ESP.TeamColor = false
 
 -- Initialize Window with black and red theme
 local Window = Fluent:CreateWindow({
-    Title = "Evade" .. Fluent.Version,
+    Title = "Evade" .. (Fluent.Version or ""),
     SubTitle = "Ultra Performance Edition",
     TabWidth = 170,
     Size = UDim2.fromOffset(650, 520),
     Acrylic = false, -- Explicitly set to false to prevent transparency
     Theme = "Dark", -- Using dark theme as base
-    MinimizeKey = Enum.KeyCode.J,
-    TextSize = 18,
+    MinimizeKey = Enum.KeyCode.J
 })
 
 -- Custom black and red theme - Increased contrast for better visibility
@@ -661,6 +657,23 @@ SilentAimCircle.Thickness = 2 -- Increased thickness
 SilentAimCircle.Filled = false
 SilentAimCircle.Transparency = 1
 
+-- Fix for common mouse functions
+local mouse1press = mouse1press or function()
+    local events = {"MouseButton1Click", "MouseButton1Down"}
+    for _, event in pairs(events) do
+        for _, connection in pairs(getconnections(UserInputService[event])) do
+            connection:Fire()
+        end
+    end
+end
+
+local mouse1release = mouse1release or function()
+    local event = "MouseButton1Up"
+    for _, connection in pairs(getconnections(UserInputService[event])) do
+        connection:Fire()
+    end
+end
+
 -- Update FOV circle position on each frame
 RunService.RenderStepped:Connect(function()
     -- Update Silent Aim FOV Circle
@@ -693,10 +706,17 @@ RunService.RenderStepped:Connect(function()
     -- Handle Avoid Fall
     if getgenv().Movement.AvoidFall and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         if LocalPlayer.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
-            local raycast = Ray.new(LocalPlayer.Character.HumanoidRootPart.Position, Vector3.new(0, -10, 0))
-            local hitPart, hitPos = workspace:FindPartOnRay(raycast, LocalPlayer.Character)
+            local rayParams = RaycastParams.new()
+            rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
+            rayParams.FilterType = Enum.RaycastFilterType.Blacklist
             
-            if not hitPart then
+            local raycastResult = workspace:Raycast(
+                LocalPlayer.Character.HumanoidRootPart.Position,
+                Vector3.new(0, -10, 0),
+                rayParams
+            )
+            
+            if not raycastResult then
                 -- No ground below, create temporary platform
                 local tempPlatform = Instance.new("Part", workspace)
                 tempPlatform.Size = Vector3.new(5, 0.5, 5)
@@ -734,9 +754,18 @@ local function GetClosestPlayerToMouseSilent()
                         
                         if VectorDistance < MaxDistance or getgenv().SilentAim.AlwaysHit then
                             if getgenv().SilentAim.WallCheck and not getgenv().SilentAim.AlwaysHit then
-                                local ray = Ray.new(Camera.CFrame.Position, (HitPart.Position - Camera.CFrame.Position).Unit * 2000)
-                                local hit, hitPosition = workspace:FindPartOnRayWithIgnoreList(ray, {Character, LocalPlayer.Character})
-                                if hit and hit:IsDescendantOf(Character) then
+                                local rayParams = RaycastParams.new()
+                                rayParams.FilterDescendantsInstances = {LocalPlayer.Character, Character}
+                                rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+                                
+                                local direction = (HitPart.Position - Camera.CFrame.Position).Unit
+                                local raycastResult = workspace:Raycast(
+                                    Camera.CFrame.Position,
+                                    direction * 2000,
+                                    rayParams
+                                )
+                                
+                                if raycastResult and raycastResult.Instance:IsDescendantOf(Character) then
                                     MaxDistance = VectorDistance
                                     Target = Player
                                 end
@@ -765,10 +794,7 @@ local function TriggerBotCheck()
         local Player = Players:GetPlayerFromCharacter(Target.Parent)
         
         -- Check if target is a UI element and ignore if needed
-        local isUIElement = false
-        if Target:IsA("GuiObject") then
-            isUIElement = true
-        end
+        local isUIElement = Target:IsA("GuiObject") or false
         
         if (Player and Player ~= LocalPlayer and (not getgenv().TriggerBot.TeamCheck or Player.Team ~= LocalPlayer.Team)) or 
            (not Player and getgenv().TriggerBot.IgnoreUI and not isUIElement) then
@@ -799,22 +825,4 @@ end
 Mouse.Move:Connect(function()
     if getgenv().TriggerBot.Enabled then
         TriggerBotCheck()
-    end
-end)
-
--- Additional TriggerBot hook for mouse movement
-RunService.Heartbeat:Connect(function()
-    if getgenv().TriggerBot.Enabled then
-        TriggerBotCheck()
-    end
-end)
-
--- Fast Reload Implementation
-local function ApplyFastReload()
-    local mt = getrawmetatable(game)
-    local oldNamecall = mt.__namecall
-    
-    if setreadonly then setreadonly(mt, false) else make_writeable(mt) end
-    
-    mt.__namecall = newcclosure(function(self, ...)
-        local method = getnamecallmethod()
+    en
