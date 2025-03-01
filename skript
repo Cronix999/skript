@@ -2,15 +2,16 @@
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local AimbotScript = loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/Aimbot-V2/main/Resources/Scripts/Raw%20Main.lua"))()
 
--- ESP Fix: Load the ESP library
+-- ESP Fix: Load the ESP library correctly
 local ESP = loadstring(game:HttpGet("https://kiriot22.com/releases/ESP.lua"))()
 ESP:Toggle(false)
 ESP.Boxes = false
 ESP.Names = false
 ESP.Tracers = false
 ESP.TeamColor = false
+ESP.Color = Color3.fromRGB(255, 0, 0)  -- Set default ESP color to red
 
--- Initialize Window with black and red theme
+-- Initialize Window with pure black and red theme
 local Window = Fluent:CreateWindow({
     Title = "Evade" .. Fluent.Version,
     SubTitle = "Enhanced UI Experience",
@@ -22,17 +23,17 @@ local Window = Fluent:CreateWindow({
     TextSize = 18,
 })
 
--- Custom black and red theme - Increased contrast for better visibility
+-- Force black and red theme with zero transparency
 Fluent:SetTheme({
-    Background = Color3.fromRGB(15, 15, 15), -- Darker background
+    Background = Color3.fromRGB(0, 0, 0), -- Pure black background
     Accent = Color3.fromRGB(255, 0, 0), -- Bright red accent
-    LightContrast = Color3.fromRGB(30, 30, 30),
-    DarkContrast = Color3.fromRGB(10, 10, 10),  
-    TextColor = Color3.fromRGB(255, 255, 255),
-    InlineColor = Color3.fromRGB(80, 0, 0), -- Deeper red inline color
+    LightContrast = Color3.fromRGB(10, 10, 10), -- Very dark contrast
+    DarkContrast = Color3.fromRGB(5, 5, 5), -- Almost black contrast  
+    TextColor = Color3.fromRGB(255, 255, 255), -- Pure white text
+    InlineColor = Color3.fromRGB(50, 0, 0), -- Deep red inline color
 })
 
--- Define Silent Aim Settings - Improved precision
+-- Define Silent Aim Settings - Completely reworked for better accuracy
 getgenv().SilentAim = {
     Enabled = false,
     FOV = 100,
@@ -41,22 +42,81 @@ getgenv().SilentAim = {
     HitPart = "Head",
     TeamCheck = false,
     WallCheck = false,
-    Prediction = 0.185, -- Increased prediction for better hit rate
-    HitChance = 100 -- Added 100% hit chance for reliable targeting
+    Prediction = 0.1357, -- Default prediction value
+    HitChance = 100, -- 100% hit chance for reliability
+    PredictionMode = "Auto" -- Auto, Manual, or Ping-Based
 }
 
--- Define Trigger Bot Settings - Improved reliability
+-- Define Trigger Bot Settings - Fixed implementation
 getgenv().TriggerBot = {
     Enabled = false,
-    Delay = 0.1,
+    Delay = 0.05, -- Reduced delay for better response
     TeamCheck = false,
-    HoldTime = 0.1 -- Added hold time for more reliable triggering
+    HoldTime = 0.1, -- Hold time for mouse button
+    MaxDistance = 1000, -- Maximum distance to check for targets
+    CheckInterval = 0.01 -- How often to check for targets
 }
 
 -- Define Movement Settings
 getgenv().Movement = {
     SpeedEnabled = false,
     SpeedMultiplier = 2 -- Default speed multiplier
+}
+
+-- Ping-based prediction values
+getgenv().PingPrediction = {
+    [20] = 0.097285846595,
+    [30] = 0.10698238794,
+    [40] = 0.116678929285,
+    [50] = 0.12637547063,
+    [60] = 0.136071012975,
+    [70] = 0.14576755432,
+    [80] = 0.155464095665,
+    [90] = 0.16516063701,
+    [100] = 0.174857178355,
+    [110] = 0.1845537197,
+    [120] = 0.194250261045,
+    [130] = 0.20394680239,
+    [140] = 0.213643343735,
+    [150] = 0.22333988508,
+    [160] = 0.233036426425,
+    [170] = 0.24273296777,
+    [180] = 0.252429509115,
+    [190] = 0.26212605046,
+    [200] = 0.271822591805,
+    [210] = 0.28151913315,
+    [220] = 0.291215674495,
+    [230] = 0.30091221584,
+    [240] = 0.310608757185,
+    [250] = 0.32030529853,
+    [260] = 0.330001839875,
+    [270] = 0.33969838122,
+    [280] = 0.349394922565,
+    [290] = 0.35909146391,
+    [300] = 0.368788005255
+}
+
+-- Recommended prediction values by ping
+getgenv().RecommendedPrediction = {
+    [20] = 0.10036,
+    [30] = 0.1130,
+    [40] = 0.13544,
+    [50] = 0.1357,
+    [60] = 0.13598,
+    [70] = 0.13892,
+    [80] = 0.1403,
+    [90] = 0.1446,
+    [100] = 0.1475,
+    [110] = 0.1512,
+    [120] = 0.1532,
+    [130] = 0.1612,
+    [140] = 0.1684,
+    [150] = 0.1720,
+    [160] = 0.1788,
+    [170] = 0.1818,
+    [180] = 0.1902,
+    [190] = 0.2129,
+    [200] = 0.2354
 }
 
 -- Initialize Aimbot Settings for compatibility with low-end executors
@@ -96,13 +156,13 @@ local Tabs = {
 -- Add Information to Info Tab
 Tabs.Info:AddParagraph({
     Title = "Evade Script",
-    Content = "Press 'J' to toggle the menu. Optimized for low-end executors with improved silent aim and added features.",
+    Content = "Press 'J' to toggle the menu. Optimized for low-end executors with improved silent aim and fixed features.",
 })
 
 -- Notify when the script is loaded
 Fluent:Notify({
     Title = "Evade Script Loaded",
-    Content = "Enhanced script with improved aim and new features!",
+    Content = "Enhanced script with fixed silent aim, TriggerBot and ESP!",
     Duration = 5,
 })
 
@@ -155,18 +215,21 @@ Tabs.Aim:AddToggle("WallCheck", {
     end
 })
 
--- Silent Aim Tab - Enhanced with perfect accuracy options
+-- Silent Aim Tab - Completely reworked for better accuracy
 Tabs.SilentAim:AddToggle("SilentAimToggle", {
     Title = "Enable Silent Aim",
     Default = false,
     Callback = function(state)
         getgenv().SilentAim.Enabled = state
+        if SilentAimCircle then
+            SilentAimCircle.Visible = state and getgenv().SilentAim.ShowFOV
+        end
     end
 })
 
 Tabs.SilentAim:AddDropdown("SilentAimPart", {
     Title = "Target Part",
-    Values = {"Head", "Torso", "Random"},
+    Values = {"Head", "HumanoidRootPart", "UpperTorso", "LowerTorso", "Random"},
     Multi = false,
     Default = "Head",
     Callback = function(value)
@@ -182,6 +245,9 @@ Tabs.SilentAim:AddSlider("SilentAimFOV", {
     Rounding = 0,
     Callback = function(value)
         getgenv().SilentAim.FOV = value
+        if SilentAimCircle then
+            SilentAimCircle.Radius = value
+        end
     end
 })
 
@@ -190,14 +256,13 @@ Tabs.SilentAim:AddToggle("SilentAimFOVVisible", {
     Default = true,
     Callback = function(state)
         getgenv().SilentAim.ShowFOV = state
-        -- Update circle visibility immediately
         if SilentAimCircle then
             SilentAimCircle.Visible = state and getgenv().SilentAim.Enabled
         end
     end
 })
 
--- Added button to toggle FOV visibility as requested
+-- Added button to toggle FOV visibility with fix
 Tabs.SilentAim:AddButton({
     Title = "Toggle FOV Visibility",
     Callback = function()
@@ -218,6 +283,9 @@ Tabs.SilentAim:AddColorpicker("SilentAimFOVColor", {
     Default = Color3.fromRGB(255, 0, 0),
     Callback = function(value)
         getgenv().SilentAim.FOVColor = value
+        if SilentAimCircle then
+            SilentAimCircle.Color = value
+        end
     end
 })
 
@@ -241,18 +309,98 @@ Tabs.SilentAim:AddSlider("SilentAimHitChance", {
     end
 })
 
+-- Added prediction mode dropdown
+Tabs.SilentAim:AddDropdown("PredictionMode", {
+    Title = "Prediction Mode",
+    Values = {"Manual", "Recommended", "Ping-Based"},
+    Multi = false,
+    Default = "Manual",
+    Callback = function(value)
+        getgenv().SilentAim.PredictionMode = value
+        
+        -- Auto-set prediction based on selected mode
+        if value == "Recommended" or value == "Ping-Based" then
+            local ping = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())
+            local predictionValue
+            
+            if value == "Recommended" then
+                -- Find the closest prediction value for current ping in recommended table
+                local closestPing = 200 -- Default to highest value
+                for p, _ in pairs(getgenv().RecommendedPrediction) do
+                    if math.abs(ping - p) < math.abs(ping - closestPing) then
+                        closestPing = p
+                    end
+                end
+                predictionValue = getgenv().RecommendedPrediction[closestPing] or 0.1357
+            else -- Ping-Based
+                -- Find the closest prediction value for current ping in ping-based table
+                local closestPing = 300 -- Default to highest value
+                for p, _ in pairs(getgenv().PingPrediction) do
+                    if math.abs(ping - p) < math.abs(ping - closestPing) then
+                        closestPing = p
+                    end
+                end
+                predictionValue = getgenv().PingPrediction[closestPing] or 0.1357
+            end
+            
+            getgenv().SilentAim.Prediction = predictionValue
+            Fluent:Notify({
+                Title = "Prediction Updated",
+                Content = "Set to " .. predictionValue .. " based on ping: " .. ping .. "ms",
+                Duration = 2,
+            })
+        end
+    end
+})
+
 Tabs.SilentAim:AddSlider("SilentAimPrediction", {
     Title = "Prediction Value",
-    Default = 0.185,
+    Default = 0.1357,
     Min = 0,
     Max = 0.5,
-    Rounding = 3,
+    Rounding = 5,
     Callback = function(value)
         getgenv().SilentAim.Prediction = value
     end
 })
 
--- TriggerBot Tab - Fixed implementation
+-- Button to update prediction based on ping
+Tabs.SilentAim:AddButton({
+    Title = "Update Prediction By Ping",
+    Callback = function()
+        local ping = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())
+        local predictionValue
+        
+        if getgenv().SilentAim.PredictionMode == "Recommended" then
+            -- Find the closest prediction value for current ping
+            local closestPing = 200 -- Default to highest value
+            for p, _ in pairs(getgenv().RecommendedPrediction) do
+                if math.abs(ping - p) < math.abs(ping - closestPing) then
+                    closestPing = p
+                end
+            end
+            predictionValue = getgenv().RecommendedPrediction[closestPing] or 0.1357
+        else -- Ping-Based or fallback
+            -- Find the closest prediction value for current ping
+            local closestPing = 300 -- Default to highest value
+            for p, _ in pairs(getgenv().PingPrediction) do
+                if math.abs(ping - p) < math.abs(ping - closestPing) then
+                    closestPing = p
+                end
+            end
+            predictionValue = getgenv().PingPrediction[closestPing] or 0.1357
+        end
+        
+        getgenv().SilentAim.Prediction = predictionValue
+        Fluent:Notify({
+            Title = "Prediction Updated",
+            Content = "Set to " .. predictionValue .. " based on ping: " .. ping .. "ms",
+            Duration = 2,
+        })
+    end
+})
+
+-- TriggerBot Tab - Completely rewritten for reliability
 Tabs.TriggerBot:AddToggle("TriggerBotToggle", {
     Title = "Enable Trigger Bot",
     Default = false,
@@ -263,10 +411,10 @@ Tabs.TriggerBot:AddToggle("TriggerBotToggle", {
 
 Tabs.TriggerBot:AddSlider("TriggerBotDelay", {
     Title = "Delay (seconds)",
-    Default = 0.1,
+    Default = 0.05,
     Min = 0,
-    Max = 1,
-    Rounding = 2,
+    Max = 0.5,
+    Rounding = 3,
     Callback = function(value)
         getgenv().TriggerBot.Delay = value
     end
@@ -277,9 +425,20 @@ Tabs.TriggerBot:AddSlider("TriggerBotHoldTime", {
     Default = 0.1,
     Min = 0.01,
     Max = 0.5,
-    Rounding = 2,
+    Rounding = 3,
     Callback = function(value)
         getgenv().TriggerBot.HoldTime = value
+    end
+})
+
+Tabs.TriggerBot:AddSlider("TriggerBotCheckInterval", {
+    Title = "Check Interval",
+    Default = 0.01,
+    Min = 0.001,
+    Max = 0.1,
+    Rounding = 3,
+    Callback = function(value)
+        getgenv().TriggerBot.CheckInterval = value
     end
 })
 
@@ -371,12 +530,22 @@ Tabs.Player:AddButton({
     end
 })
 
--- ESP Tab
+-- ESP Tab with fixes
 Tabs.ESP:AddToggle("ESPToggle", {
     Title = "Enable ESP",
     Default = false,
     Callback = function(state)
         ESP:Toggle(state)
+        -- Force update ESP options to ensure it works
+        if state then
+            task.delay(0.1, function()
+                ESP.Boxes = getgenv().ESP_Boxes or false
+                ESP.Names = getgenv().ESP_Names or false
+                ESP.Tracers = getgenv().ESP_Tracers or false
+                ESP.TeamColor = false
+                ESP.Color = getgenv().ESP_Color or Color3.fromRGB(255, 0, 0)
+            end)
+        end
     end
 })
 
@@ -384,6 +553,7 @@ Tabs.ESP:AddToggle("ESPBoxes", {
     Title = "Show Boxes",
     Default = false,
     Callback = function(state)
+        getgenv().ESP_Boxes = state
         ESP.Boxes = state
     end
 })
@@ -392,6 +562,7 @@ Tabs.ESP:AddToggle("ESPNames", {
     Title = "Show Names",
     Default = false,
     Callback = function(state)
+        getgenv().ESP_Names = state
         ESP.Names = state
     end
 })
@@ -400,6 +571,7 @@ Tabs.ESP:AddToggle("ESPTracers", {
     Title = "Show Tracers",
     Default = false,
     Callback = function(state)
+        getgenv().ESP_Tracers = state
         ESP.Tracers = state
     end
 })
@@ -408,7 +580,29 @@ Tabs.ESP:AddColorpicker("ESPColor", {
     Title = "ESP Color",
     Default = Color3.fromRGB(255, 0, 0),
     Callback = function(value)
+        getgenv().ESP_Color = value
         ESP.Color = value
+    end
+})
+
+-- Button to force refresh ESP
+Tabs.ESP:AddButton({
+    Title = "Force Refresh ESP",
+    Callback = function()
+        if ESP then
+            ESP:Toggle(false)
+            task.wait(0.1)
+            ESP:Toggle(true)
+            ESP.Boxes = getgenv().ESP_Boxes or false
+            ESP.Names = getgenv().ESP_Names or false
+            ESP.Tracers = getgenv().ESP_Tracers or false
+            ESP.Color = getgenv().ESP_Color or Color3.fromRGB(255, 0, 0)
+            Fluent:Notify({
+                Title = "ESP Refreshed",
+                Content = "ESP has been forcefully refreshed",
+                Duration = 2,
+            })
+        end
     end
 })
 
@@ -432,10 +626,10 @@ Tabs.Misc:AddButton({
     end
 })
 
--- UI Customization Tab - Removed transparency options to prevent errors
+-- UI Customization Tab - Fixed to ensure no transparency
 Tabs.UI:AddColorpicker("BackgroundColor", {
     Title = "Background Color",
-    Default = Color3.fromRGB(15, 15, 15),
+    Default = Color3.fromRGB(0, 0, 0),
     Callback = function(value)
         Fluent:SetThemeColor("Background", value)
     end
@@ -449,7 +643,27 @@ Tabs.UI:AddColorpicker("AccentColor", {
     end
 })
 
--- Silent Aim Implementation with improved accuracy
+-- Button to reset to pure black and red theme
+Tabs.UI:AddButton({
+    Title = "Reset to Black/Red Theme",
+    Callback = function()
+        Fluent:SetTheme({
+            Background = Color3.fromRGB(0, 0, 0), -- Pure black background
+            Accent = Color3.fromRGB(255, 0, 0), -- Bright red accent
+            LightContrast = Color3.fromRGB(10, 10, 10), -- Very dark contrast
+            DarkContrast = Color3.fromRGB(5, 5, 5), -- Almost black contrast  
+            TextColor = Color3.fromRGB(255, 255, 255), -- Pure white text
+            InlineColor = Color3.fromRGB(50, 0, 0), -- Deep red inline color
+        })
+        Fluent:Notify({
+            Title = "Theme Reset",
+            Content = "UI theme has been reset to pure black and red",
+            Duration = 2,
+        })
+    end
+})
+
+-- Get game services
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
@@ -457,14 +671,23 @@ local Camera = workspace.CurrentCamera
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
--- Create Silent Aim FOV circle
-local SilentAimCircle = Drawing.new("Circle")
-SilentAimCircle.Visible = getgenv().SilentAim.ShowFOV and getgenv().SilentAim.Enabled
-SilentAimCircle.Radius = getgenv().SilentAim.FOV
-SilentAimCircle.Color = getgenv().SilentAim.FOVColor
-SilentAimCircle.Thickness = 1
-SilentAimCircle.Filled = false
-SilentAimCircle.Transparency = 1
+-- Create Silent Aim FOV circle with fix for visibility
+if Drawing then
+    SilentAimCircle = Drawing.new("Circle")
+    SilentAimCircle.Visible = getgenv().SilentAim.ShowFOV and getgenv().SilentAim.Enabled
+    SilentAimCircle.Radius = getgenv().SilentAim.FOV
+    SilentAimCircle.Color = getgenv().SilentAim.FOVColor
+    SilentAimCircle.Thickness = 1.5
+    SilentAimCircle.Filled = false
+    SilentAimCircle.Transparency = 1
+end
+
+-- Function to print debug information - helpful for low-end executors
+local function printDebug(message)
+    if getgenv().DebugMode then
+        print("[DEBUG] " .. message)
+    end
+end
 
 -- Update FOV circle position on each frame
 RunService.RenderStepped:Connect(function()
@@ -480,12 +703,40 @@ RunService.RenderStepped:Connect(function()
     if getgenv().Movement.SpeedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = 16 * getgenv().Movement.SpeedMultiplier
     end
-end)
+    
+    -- Auto-update prediction if using ping-based modes
+    if getgenv().SilentAim.PredictionMode ~= "Manual" and getgenv().SilentAim.Enabled then
+        local currentFrame = tick()
+        -- Only update every 3 seconds to avoid performance impact
+        if not getgenv().LastPredictionUpdate or currentFrame - getgenv().LastPredictionUpdate > 3 then
+            local ping = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())
+            local predictionTable = getgenv().SilentAim.PredictionMode == "Recommended" 
+                and getgenv().RecommendedPrediction 
+                or getgenv().PingPrediction
+            
+            -- Find the closest ping value
+            local closestPing = getgenv().SilentAim.PredictionMode == "Recommended" and 200 or 300
+            for p, _ in pairs(predictionTable) do
+                if math.abs(ping - p) < math.abs(ping - closestPing) then
+                    closestPing = p
+                end
+            end
+            
+            -- Update prediction value
+            getgenv().SilentAim.Prediction = predictionTable[closestPing] or 0.1357
+            getgenv().LastPredictionUpdate = currentFrame
+        end
+    end
+})
 
--- Get closest player function for silent aim (improved for accuracy)
+-- Get closest player function for silent aim (completely rewritten for accuracy)
 local function GetClosestPlayerToMouseSilent()
     local Target = nil
     local MaxDistance = getgenv().SilentAim.FOV
+    local MousePos = Vector2.new(Mouse.X, Mouse.Y)
+    
+    -- Ensure we're not wasting cycles if not enabled
+    if not getgenv().SilentAim.Enabled then return nil end
     
     -- Check hit chance
     if math.random(0, 100) > getgenv().SilentAim.HitChance then
@@ -496,123 +747,25 @@ local function GetClosestPlayerToMouseSilent()
         if Player ~= LocalPlayer then
             if not getgenv().SilentAim.TeamCheck or Player.Team ~= LocalPlayer.Team then
                 local Character = Player.Character
-                if Character and Character:FindFirstChild("Humanoid") and Character.Humanoid.Health > 0 and Character:FindFirstChild("HumanoidRootPart") then
-                    local HitPart = Character:FindFirstChild(getgenv().SilentAim.HitPart) or Character:FindFirstChild("HumanoidRootPart")
-                    if HitPart then
-                        local ScreenPoint = Camera:WorldToScreenPoint(HitPart.Position)
-                        local VectorDistance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
-                        
-                        if VectorDistance < MaxDistance then
-                            if getgenv().SilentAim.WallCheck then
-                                local ray = Ray.new(Camera.CFrame.Position, (HitPart.Position - Camera.CFrame.Position).Unit * 2000)
-                                local hit, hitPosition = workspace:FindPartOnRayWithIgnoreList(ray, {Character, LocalPlayer.Character})
-                                if hit and hit:IsDescendantOf(Character) then
-                                    MaxDistance = VectorDistance
-                                    Target = Player
-                                end
-                            else
-                                MaxDistance = VectorDistance
-                                Target = Player
+                if Character and Character:FindFirstChild("Humanoid") and Character.Humanoid.Health > 0 then
+                    local HitPart
+                    
+                    -- Handle random target part selection
+                    if getgenv().SilentAim.HitPart == "Random" then
+                        local validParts = {}
+                        for _, partName in pairs({"Head", "HumanoidRootPart", "UpperTorso", "LowerTorso"}) do
+                            if Character:FindFirstChild(partName) then
+                                table.insert(validParts, Character[partName])
                             end
                         end
+                        if #validParts > 0 then
+                            HitPart = validParts[math.random(1, #validParts)]
+                        end
+                    else
+                        -- Use specified part or fall back to HumanoidRootPart
+                        HitPart = Character:FindFirstChild(getgenv().SilentAim.HitPart) or Character:FindFirstChild("HumanoidRootPart")
                     end
-                end
-            end
-        end
-    end
-    
-    return Target
-end
-
--- Fixed TriggerBot implementation
-local TriggerBotRunning = false
-local function TriggerBotCheck()
-    if TriggerBotRunning or not getgenv().TriggerBot.Enabled then return end
-    TriggerBotRunning = true
-    
-    local Target = Mouse.Target
-    if Target and Target.Parent then
-        local Player = Players:GetPlayerFromCharacter(Target.Parent)
-        if Player and Player ~= LocalPlayer then
-            if not getgenv().TriggerBot.TeamCheck or Player.Team ~= LocalPlayer.Team then
-                task.wait(getgenv().TriggerBot.Delay) -- Using task.wait for better timing precision
-                mouse1press()
-                task.wait(getgenv().TriggerBot.HoldTime) -- Hold time for more reliable clicks
-                mouse1release()
-            end
-        end
-    end
-    
-    TriggerBotRunning = false
-end
-
--- Hook TriggerBot to Mouse Movement
-Mouse.Move:Connect(function()
-    if getgenv().TriggerBot.Enabled then
-        TriggerBotCheck()
-    end
-end)
-
--- Silent Aim Hook (Improved for better hit registration)
-local oldNamecall
-oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-    local args = {...}
-    local method = getnamecallmethod()
-    
-    if getgenv().SilentAim.Enabled and (method == "FireServer" or method == "InvokeServer" or method == "FindPartOnRayWithIgnoreList") and self.Name:match("Remote") then
-        local closestPlayer = GetClosestPlayerToMouseSilent()
-        
-        if closestPlayer and closestPlayer.Character then
-            local hitPart
-            if getgenv().SilentAim.HitPart == "Random" then
-                local parts = {"Head", "UpperTorso", "LowerTorso", "LeftUpperArm", "RightUpperArm", "LeftLowerLeg", "RightLowerLeg"}
-                hitPart = closestPlayer.Character:FindFirstChild(parts[math.random(1, #parts)]) or closestPlayer.Character:FindFirstChild("HumanoidRootPart")
-            else
-                hitPart = closestPlayer.Character:FindFirstChild(getgenv().SilentAim.HitPart) or closestPlayer.Character:FindFirstChild("HumanoidRootPart")
-            end
-            
-            if hitPart then
-                -- Modify arguments to target the hitPart
-                for i, v in pairs(args) do
-                    if typeof(v) == "Vector3" then
-                        -- This is likely a position or direction vector
-                        args[i] = hitPart.Position + (hitPart.Velocity * getgenv().SilentAim.Prediction)
-                    elseif typeof(v) == "CFrame" then
-                        -- This is likely a CFrame for aiming
-                        args[i] = CFrame.new(v.Position, hitPart.Position + (hitPart.Velocity * getgenv().SilentAim.Prediction))
-                    elseif typeof(v) == "Ray" then
-                        -- This is likely a ray for raycasting
-                        args[i] = Ray.new(Camera.CFrame.Position, (hitPart.Position + (hitPart.Velocity * getgenv().SilentAim.Prediction) - Camera.CFrame.Position).Unit * 2000)
-                    end
-                end
-                
-                return oldNamecall(self, unpack(args))
-            end
-        end
-    end
-    
-    return oldNamecall(self, ...)
-end)
-
--- Additional hook for FindPartOnRayWithIgnoreList to improve silent aim effectiveness
-local oldIndex = nil
-oldIndex = hookmetamethod(game, "__index", function(self, index)
-    if getgenv().SilentAim.Enabled and index == "FindPartOnRayWithIgnoreList" and not checkcaller() then
-        local closestPlayer = GetClosestPlayerToMouseSilent()
-        if closestPlayer and closestPlayer.Character then
-            local hitPart = closestPlayer.Character:FindFirstChild(getgenv().SilentAim.HitPart) or closestPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if hitPart then
-                return function(_, ray, ignore)
-                    -- Create a new ray pointing at the target
-                    local newRay = Ray.new(ray.Origin, (hitPart.Position + (hitPart.Velocity * getgenv().SilentAim.Prediction) - ray.Origin).Unit * 2000)
-                    return oldIndex(self, index)(self, newRay, ignore)
-                end
-            end
-        end
-    end
-    return oldIndex(self, index)
-end)
-
--- Print completion message
-print("Enhanced Evade Script loaded successfully!")
-print("Added features: Improved silent aim, walk speed, fixed trigger bot, FOV toggle")
+                    
+                    if HitPart then
+                        local ScreenPoint = Camera:WorldToScreenPoint(HitPart.Position)
+                        local ScreenPos = Vector2.new(ScreenPoint
