@@ -1,5 +1,8 @@
 -- Load required libraries
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local AimbotScript = loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/Aimbot-V2/main/Resources/Scripts/Raw%20Main.lua"))()
+
+-- ESP Fix: Load the ESP library
 local ESP = loadstring(game:HttpGet("https://kiriot22.com/releases/ESP.lua"))()
 ESP:Toggle(false)
 ESP.Boxes = false
@@ -9,13 +12,14 @@ ESP.TeamColor = false
 
 -- Initialize Window with black and red theme
 local Window = Fluent:CreateWindow({
-    Title = "Evade" .. (Fluent.Version or ""),
-    SubTitle = "Ultra Performance Edition",
+    Title = "Evade" .. Fluent.Version,
+    SubTitle = "Enhanced UI Experience",
     TabWidth = 170,
     Size = UDim2.fromOffset(650, 520),
     Acrylic = false, -- Explicitly set to false to prevent transparency
     Theme = "Dark", -- Using dark theme as base
-    MinimizeKey = Enum.KeyCode.J
+    MinimizeKey = Enum.KeyCode.J,
+    TextSize = 18,
 })
 
 -- Custom black and red theme - Increased contrast for better visibility
@@ -28,48 +32,31 @@ Fluent:SetTheme({
     InlineColor = Color3.fromRGB(80, 0, 0), -- Deeper red inline color
 })
 
--- Define Silent Aim Settings - IMPROVED FOR BLATANT PERFORMANCE
+-- Define Silent Aim Settings - Improved precision
 getgenv().SilentAim = {
     Enabled = false,
-    FOV = 500, -- Increased FOV for more blatant targeting
+    FOV = 100,
     ShowFOV = true,
     FOVColor = Color3.fromRGB(255, 0, 0),
-    HitPart = "Head", -- Default to headshots
+    HitPart = "Head",
     TeamCheck = false,
     WallCheck = false,
-    Prediction = 0.5, -- Dramatically increased prediction
-    HitChance = 100, -- 100% hit chance for guaranteed hits
-    AlwaysHit = true -- New feature - will always hit regardless of conditions
+    Prediction = 0.185, -- Increased prediction for better hit rate
+    HitChance = 100 -- Added 100% hit chance for reliable targeting
 }
 
--- Define Trigger Bot Settings - FIXED IMPLEMENTATION
+-- Define Trigger Bot Settings - Improved reliability
 getgenv().TriggerBot = {
     Enabled = false,
-    Delay = 0.01, -- Faster response time
+    Delay = 0.1,
     TeamCheck = false,
-    HoldTime = 0.05, -- Reduced hold time for rapid firing
-    DoubleClick = true, -- New feature - double click for more damage
-    IgnoreUI = true -- Will trigger even when UI elements are under cursor
+    HoldTime = 0.1 -- Added hold time for more reliable triggering
 }
 
--- Define Movement Settings - EXPANDED OPTIONS
+-- Define Movement Settings
 getgenv().Movement = {
     SpeedEnabled = false,
-    SpeedMultiplier = 2, -- Default speed multiplier
-    JumpEnabled = false,
-    JumpMultiplier = 2, -- Jump height multiplier
-    NoClip = false, -- Added NoClip feature
-    AvoidFall = false -- Avoid falling from platform
-}
-
--- Define Weapon Settings - NEW FEATURE
-getgenv().Weapon = {
-    FastReload = false,
-    ReloadMultiplier = 3, -- How much faster reloading should be
-    NoRecoil = false,
-    NoSpread = false,
-    InfiniteAmmo = false,
-    AutoFire = false -- Convert semi-auto to full auto
+    SpeedMultiplier = 2 -- Default speed multiplier
 }
 
 -- Initialize Aimbot Settings for compatibility with low-end executors
@@ -102,21 +89,20 @@ local Tabs = {
     Visuals = Window:AddTab({ Title = "Visuals", Icon = "eye" }),
     ESP = Window:AddTab({ Title = "ESP", Icon = "search" }),
     Player = Window:AddTab({ Title = "Player", Icon = "user" }),
-    Weapon = Window:AddTab({ Title = "Weapon", Icon = "crosshair" }), -- New tab for weapon features
     Misc = Window:AddTab({ Title = "Misc", Icon = "settings" }),
     UI = Window:AddTab({ Title = "UI", Icon = "paintbrush" })
 }
 
 -- Add Information to Info Tab
 Tabs.Info:AddParagraph({
-    Title = "Evade Script - Ultra Edition",
-    Content = "Press 'J' to toggle the menu. Features blatant silent aim, fixed trigger bot, faster reload, and more basic features!",
+    Title = "Evade Script",
+    Content = "Press 'J' to toggle the menu. Optimized for low-end executors with improved silent aim and added features.",
 })
 
 -- Notify when the script is loaded
 Fluent:Notify({
     Title = "Evade Script Loaded",
-    Content = "Ultra Edition with blatant aim and new features!",
+    Content = "Enhanced script with improved aim and new features!",
     Duration = 5,
 })
 
@@ -141,9 +127,9 @@ Tabs.Aim:AddDropdown("AimbotPart", {
 
 Tabs.Aim:AddSlider("AimbotFOV", {
     Title = "FOV Size",
-    Default = 500, -- Increased for blatant aim
+    Default = 100,
     Min = 50,
-    Max = 1000, -- Increased maximum
+    Max = 500,
     Rounding = 0,
     Callback = function(value)
         getgenv().Aimbot.FOVSettings.Amount = value
@@ -152,7 +138,7 @@ Tabs.Aim:AddSlider("AimbotFOV", {
 
 Tabs.Aim:AddSlider("AimbotSmoothing", {
     Title = "Smoothing",
-    Default = 0.1, -- Less smoothing for more blatant aim
+    Default = 0.5,
     Min = 0,
     Max = 1,
     Rounding = 2,
@@ -169,7 +155,7 @@ Tabs.Aim:AddToggle("WallCheck", {
     end
 })
 
--- Silent Aim Tab - Enhanced with more blatant options
+-- Silent Aim Tab - Enhanced with perfect accuracy options
 Tabs.SilentAim:AddToggle("SilentAimToggle", {
     Title = "Enable Silent Aim",
     Default = false,
@@ -190,21 +176,12 @@ Tabs.SilentAim:AddDropdown("SilentAimPart", {
 
 Tabs.SilentAim:AddSlider("SilentAimFOV", {
     Title = "FOV Size",
-    Default = 500, -- Increased for more blatant targeting
+    Default = 100,
     Min = 50,
-    Max = 1000, -- Increased maximum
+    Max = 500,
     Rounding = 0,
     Callback = function(value)
         getgenv().SilentAim.FOV = value
-    end
-})
-
--- New toggle for Always Hit feature
-Tabs.SilentAim:AddToggle("SilentAimAlwaysHit", {
-    Title = "Always Hit Target",
-    Default = true,
-    Callback = function(state)
-        getgenv().SilentAim.AlwaysHit = state
     end
 })
 
@@ -220,6 +197,7 @@ Tabs.SilentAim:AddToggle("SilentAimFOVVisible", {
     end
 })
 
+-- Added button to toggle FOV visibility as requested
 Tabs.SilentAim:AddButton({
     Title = "Toggle FOV Visibility",
     Callback = function()
@@ -265,16 +243,16 @@ Tabs.SilentAim:AddSlider("SilentAimHitChance", {
 
 Tabs.SilentAim:AddSlider("SilentAimPrediction", {
     Title = "Prediction Value",
-    Default = 0.5, -- Increased for better hit rate
+    Default = 0.185,
     Min = 0,
-    Max = 1, -- Increased maximum
+    Max = 0.5,
     Rounding = 3,
     Callback = function(value)
         getgenv().SilentAim.Prediction = value
     end
 })
 
--- TriggerBot Tab - FIXED IMPLEMENTATION
+-- TriggerBot Tab - Fixed implementation
 Tabs.TriggerBot:AddToggle("TriggerBotToggle", {
     Title = "Enable Trigger Bot",
     Default = false,
@@ -285,10 +263,10 @@ Tabs.TriggerBot:AddToggle("TriggerBotToggle", {
 
 Tabs.TriggerBot:AddSlider("TriggerBotDelay", {
     Title = "Delay (seconds)",
-    Default = 0.01, -- Faster response
+    Default = 0.1,
     Min = 0,
-    Max = 0.5, -- Reduced maximum for faster response
-    Rounding = 3,
+    Max = 1,
+    Rounding = 2,
     Callback = function(value)
         getgenv().TriggerBot.Delay = value
     end
@@ -296,30 +274,12 @@ Tabs.TriggerBot:AddSlider("TriggerBotDelay", {
 
 Tabs.TriggerBot:AddSlider("TriggerBotHoldTime", {
     Title = "Hold Time (seconds)",
-    Default = 0.05, -- Faster clicking
+    Default = 0.1,
     Min = 0.01,
-    Max = 0.2, -- Reduced maximum
-    Rounding = 3,
+    Max = 0.5,
+    Rounding = 2,
     Callback = function(value)
         getgenv().TriggerBot.HoldTime = value
-    end
-})
-
--- New toggle for Double Click feature
-Tabs.TriggerBot:AddToggle("TriggerBotDoubleClick", {
-    Title = "Double Click (More Damage)",
-    Default = true,
-    Callback = function(state)
-        getgenv().TriggerBot.DoubleClick = state
-    end
-})
-
--- New toggle to ignore UI elements
-Tabs.TriggerBot:AddToggle("TriggerBotIgnoreUI", {
-    Title = "Ignore UI Elements",
-    Default = true,
-    Callback = function(state)
-        getgenv().TriggerBot.IgnoreUI = state
     end
 })
 
@@ -361,7 +321,7 @@ Tabs.Visuals:AddSlider("FOVTransparency", {
 
 Tabs.Visuals:AddSlider("CameraFOV", {
     Title = "Camera FOV",
-    Default = 90, -- Increased default FOV
+    Default = 70,
     Min = 60,
     Max = 120,
     Rounding = 0,
@@ -370,7 +330,7 @@ Tabs.Visuals:AddSlider("CameraFOV", {
     end
 })
 
--- Player Tab - Enhanced movement features
+-- Player Tab - Added new movement features
 Tabs.Player:AddToggle("SpeedHackToggle", {
     Title = "Enable Speed Hack",
     Default = false,
@@ -402,162 +362,11 @@ Tabs.Player:AddSlider("SpeedMultiplier", {
     end
 })
 
--- New jump height feature
-Tabs.Player:AddToggle("JumpHackToggle", {
-    Title = "Enhanced Jump",
-    Default = false,
-    Callback = function(state)
-        getgenv().Movement.JumpEnabled = state
-        if state then
-            Fluent:Notify({
-                Title = "Jump Hack Enabled",
-                Content = "Your character will now jump higher!",
-                Duration = 2,
-            })
-        else
-            -- Reset player's jump power when disabled
-            if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
-                game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50 -- Default jump power
-            end
-        end
-    end
-})
-
-Tabs.Player:AddSlider("JumpMultiplier", {
-    Title = "Jump Multiplier",
-    Default = 2,
-    Min = 1,
-    Max = 5,
-    Rounding = 1,
-    Callback = function(value)
-        getgenv().Movement.JumpMultiplier = value
-    end
-})
-
--- NoClip feature
-Tabs.Player:AddToggle("NoClipToggle", {
-    Title = "NoClip (Walk Through Walls)",
-    Default = false,
-    Callback = function(state)
-        getgenv().Movement.NoClip = state
-        if state then
-            Fluent:Notify({
-                Title = "NoClip Enabled",
-                Content = "You can now walk through walls!",
-                Duration = 2,
-            })
-        end
-    end
-})
-
--- Anti-fall feature
-Tabs.Player:AddToggle("AvoidFallToggle", {
-    Title = "Avoid Falling",
-    Default = false,
-    Callback = function(state)
-        getgenv().Movement.AvoidFall = state
-        if state then
-            Fluent:Notify({
-                Title = "Avoid Fall Enabled",
-                Content = "You will no longer fall off platforms!",
-                Duration = 2,
-            })
-        end
-    end
-})
-
 Tabs.Player:AddButton({
     Title = "Reset Character",
     Callback = function()
         if game.Players.LocalPlayer.Character then
             game.Players.LocalPlayer.Character:BreakJoints()
-        end
-    end
-})
-
--- NEW WEAPON TAB - Fast reload and other weapon features
-Tabs.Weapon:AddToggle("FastReloadToggle", {
-    Title = "Fast Reload",
-    Default = false,
-    Callback = function(state)
-        getgenv().Weapon.FastReload = state
-        if state then
-            Fluent:Notify({
-                Title = "Fast Reload Enabled",
-                Content = "Your weapons will now reload faster!",
-                Duration = 2,
-            })
-        end
-    end
-})
-
-Tabs.Weapon:AddSlider("ReloadMultiplier", {
-    Title = "Reload Speed Multiplier",
-    Default = 3,
-    Min = 1,
-    Max = 10,
-    Rounding = 1,
-    Callback = function(value)
-        getgenv().Weapon.ReloadMultiplier = value
-    end
-})
-
-Tabs.Weapon:AddToggle("NoRecoilToggle", {
-    Title = "No Recoil",
-    Default = false,
-    Callback = function(state)
-        getgenv().Weapon.NoRecoil = state
-        if state then
-            Fluent:Notify({
-                Title = "No Recoil Enabled",
-                Content = "Your weapons will have no recoil!",
-                Duration = 2,
-            })
-        end
-    end
-})
-
-Tabs.Weapon:AddToggle("NoSpreadToggle", {
-    Title = "No Spread",
-    Default = false,
-    Callback = function(state)
-        getgenv().Weapon.NoSpread = state
-        if state then
-            Fluent:Notify({
-                Title = "No Spread Enabled",
-                Content = "Your weapons will have perfect accuracy!",
-                Duration = 2,
-            })
-        end
-    end
-})
-
-Tabs.Weapon:AddToggle("InfiniteAmmoToggle", {
-    Title = "Infinite Ammo",
-    Default = false,
-    Callback = function(state)
-        getgenv().Weapon.InfiniteAmmo = state
-        if state then
-            Fluent:Notify({
-                Title = "Infinite Ammo Enabled",
-                Content = "Your weapons will never run out of ammo!",
-                Duration = 2,
-            })
-        end
-    end
-})
-
-Tabs.Weapon:AddToggle("AutoFireToggle", {
-    Title = "Auto Fire",
-    Default = false,
-    Callback = function(state)
-        getgenv().Weapon.AutoFire = state
-        if state then
-            Fluent:Notify({
-                Title = "Auto Fire Enabled",
-                Content = "All weapons will now fire automatically!",
-                Duration = 2,
-            })
         end
     end
 })
@@ -623,7 +432,7 @@ Tabs.Misc:AddButton({
     end
 })
 
--- UI Customization Tab
+-- UI Customization Tab - Removed transparency options to prevent errors
 Tabs.UI:AddColorpicker("BackgroundColor", {
     Title = "Background Color",
     Default = Color3.fromRGB(15, 15, 15),
@@ -640,7 +449,7 @@ Tabs.UI:AddColorpicker("AccentColor", {
     end
 })
 
--- Silent Aim Implementation with MORE BLATANT PERFORMANCE
+-- Silent Aim Implementation with improved accuracy
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
@@ -653,26 +462,9 @@ local SilentAimCircle = Drawing.new("Circle")
 SilentAimCircle.Visible = getgenv().SilentAim.ShowFOV and getgenv().SilentAim.Enabled
 SilentAimCircle.Radius = getgenv().SilentAim.FOV
 SilentAimCircle.Color = getgenv().SilentAim.FOVColor
-SilentAimCircle.Thickness = 2 -- Increased thickness
+SilentAimCircle.Thickness = 1
 SilentAimCircle.Filled = false
 SilentAimCircle.Transparency = 1
-
--- Fix for common mouse functions
-local mouse1press = mouse1press or function()
-    local events = {"MouseButton1Click", "MouseButton1Down"}
-    for _, event in pairs(events) do
-        for _, connection in pairs(getconnections(UserInputService[event])) do
-            connection:Fire()
-        end
-    end
-end
-
-local mouse1release = mouse1release or function()
-    local event = "MouseButton1Up"
-    for _, connection in pairs(getconnections(UserInputService[event])) do
-        connection:Fire()
-    end
-end
 
 -- Update FOV circle position on each frame
 RunService.RenderStepped:Connect(function()
@@ -688,57 +480,15 @@ RunService.RenderStepped:Connect(function()
     if getgenv().Movement.SpeedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = 16 * getgenv().Movement.SpeedMultiplier
     end
-    
-    -- Handle Jump Hack
-    if getgenv().Movement.JumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.JumpPower = 50 * getgenv().Movement.JumpMultiplier
-    end
-    
-    -- Handle NoClip
-    if getgenv().Movement.NoClip and LocalPlayer.Character then
-        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
-        end
-    end
-    
-    -- Handle Avoid Fall
-    if getgenv().Movement.AvoidFall and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        if LocalPlayer.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
-            local rayParams = RaycastParams.new()
-            rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
-            rayParams.FilterType = Enum.RaycastFilterType.Blacklist
-            
-            local raycastResult = workspace:Raycast(
-                LocalPlayer.Character.HumanoidRootPart.Position,
-                Vector3.new(0, -10, 0),
-                rayParams
-            )
-            
-            if not raycastResult then
-                -- No ground below, create temporary platform
-                local tempPlatform = Instance.new("Part", workspace)
-                tempPlatform.Size = Vector3.new(5, 0.5, 5)
-                tempPlatform.Anchored = true
-                tempPlatform.CFrame = CFrame.new(LocalPlayer.Character.HumanoidRootPart.Position - Vector3.new(0, 3, 0))
-                tempPlatform.Transparency = 0.8
-                tempPlatform.Name = "TempPlatform"
-                
-                -- Remove platform after 2 seconds
-                game:GetService("Debris"):AddItem(tempPlatform, 2)
-            end
-        end
-    end
 end)
 
--- Get closest player function for silent aim (IMPROVED FOR BLATANT AIM)
+-- Get closest player function for silent aim (improved for accuracy)
 local function GetClosestPlayerToMouseSilent()
     local Target = nil
-    local MaxDistance = getgenv().SilentAim.AlwaysHit and math.huge or getgenv().SilentAim.FOV
+    local MaxDistance = getgenv().SilentAim.FOV
     
     -- Check hit chance
-    if not getgenv().SilentAim.AlwaysHit and math.random(0, 100) > getgenv().SilentAim.HitChance then
+    if math.random(0, 100) > getgenv().SilentAim.HitChance then
         return nil
     end
     
@@ -752,20 +502,11 @@ local function GetClosestPlayerToMouseSilent()
                         local ScreenPoint = Camera:WorldToScreenPoint(HitPart.Position)
                         local VectorDistance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
                         
-                        if VectorDistance < MaxDistance or getgenv().SilentAim.AlwaysHit then
-                            if getgenv().SilentAim.WallCheck and not getgenv().SilentAim.AlwaysHit then
-                                local rayParams = RaycastParams.new()
-                                rayParams.FilterDescendantsInstances = {LocalPlayer.Character, Character}
-                                rayParams.FilterType = Enum.RaycastFilterType.Blacklist
-                                
-                                local direction = (HitPart.Position - Camera.CFrame.Position).Unit
-                                local raycastResult = workspace:Raycast(
-                                    Camera.CFrame.Position,
-                                    direction * 2000,
-                                    rayParams
-                                )
-                                
-                                if raycastResult and raycastResult.Instance:IsDescendantOf(Character) then
+                        if VectorDistance < MaxDistance then
+                            if getgenv().SilentAim.WallCheck then
+                                local ray = Ray.new(Camera.CFrame.Position, (HitPart.Position - Camera.CFrame.Position).Unit * 2000)
+                                local hit, hitPosition = workspace:FindPartOnRayWithIgnoreList(ray, {Character, LocalPlayer.Character})
+                                if hit and hit:IsDescendantOf(Character) then
                                     MaxDistance = VectorDistance
                                     Target = Player
                                 end
@@ -783,7 +524,7 @@ local function GetClosestPlayerToMouseSilent()
     return Target
 end
 
--- FIXED TRIGGERBOT IMPLEMENTATION
+-- Fixed TriggerBot implementation
 local TriggerBotRunning = false
 local function TriggerBotCheck()
     if TriggerBotRunning or not getgenv().TriggerBot.Enabled then return end
@@ -792,37 +533,86 @@ local function TriggerBotCheck()
     local Target = Mouse.Target
     if Target and Target.Parent then
         local Player = Players:GetPlayerFromCharacter(Target.Parent)
-        
-        -- Check if target is a UI element and ignore if needed
-        local isUIElement = Target:IsA("GuiObject") or false
-        
-        if (Player and Player ~= LocalPlayer and (not getgenv().TriggerBot.TeamCheck or Player.Team ~= LocalPlayer.Team)) or 
-           (not Player and getgenv().TriggerBot.IgnoreUI and not isUIElement) then
-            task.wait(getgenv().TriggerBot.Delay) -- Using task.wait for better timing precision
-            
-            -- Double click for more damage if enabled
-            if getgenv().TriggerBot.DoubleClick then
+        if Player and Player ~= LocalPlayer then
+            if not getgenv().TriggerBot.TeamCheck or Player.Team ~= LocalPlayer.Team then
+                task.wait(getgenv().TriggerBot.Delay) -- Using task.wait for better timing precision
                 mouse1press()
-                task.wait(getgenv().TriggerBot.HoldTime / 2)
-                mouse1release()
-                task.wait(0.01) -- Small delay between clicks
-                mouse1press()
-                task.wait(getgenv().TriggerBot.HoldTime / 2)
-                mouse1release()
-            else
-                mouse1press()
-                task.wait(getgenv().TriggerBot.HoldTime)
+                task.wait(getgenv().TriggerBot.HoldTime) -- Hold time for more reliable clicks
                 mouse1release()
             end
         end
     end
     
-    task.wait(0.01) -- Small cooldown to prevent excessive CPU usage
     TriggerBotRunning = false
 end
 
--- Hook TriggerBot to Mouse Movement and Clicks
+-- Hook TriggerBot to Mouse Movement
 Mouse.Move:Connect(function()
     if getgenv().TriggerBot.Enabled then
         TriggerBotCheck()
-    en
+    end
+end)
+
+-- Silent Aim Hook (Improved for better hit registration)
+local oldNamecall
+oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local args = {...}
+    local method = getnamecallmethod()
+    
+    if getgenv().SilentAim.Enabled and (method == "FireServer" or method == "InvokeServer" or method == "FindPartOnRayWithIgnoreList") and self.Name:match("Remote") then
+        local closestPlayer = GetClosestPlayerToMouseSilent()
+        
+        if closestPlayer and closestPlayer.Character then
+            local hitPart
+            if getgenv().SilentAim.HitPart == "Random" then
+                local parts = {"Head", "UpperTorso", "LowerTorso", "LeftUpperArm", "RightUpperArm", "LeftLowerLeg", "RightLowerLeg"}
+                hitPart = closestPlayer.Character:FindFirstChild(parts[math.random(1, #parts)]) or closestPlayer.Character:FindFirstChild("HumanoidRootPart")
+            else
+                hitPart = closestPlayer.Character:FindFirstChild(getgenv().SilentAim.HitPart) or closestPlayer.Character:FindFirstChild("HumanoidRootPart")
+            end
+            
+            if hitPart then
+                -- Modify arguments to target the hitPart
+                for i, v in pairs(args) do
+                    if typeof(v) == "Vector3" then
+                        -- This is likely a position or direction vector
+                        args[i] = hitPart.Position + (hitPart.Velocity * getgenv().SilentAim.Prediction)
+                    elseif typeof(v) == "CFrame" then
+                        -- This is likely a CFrame for aiming
+                        args[i] = CFrame.new(v.Position, hitPart.Position + (hitPart.Velocity * getgenv().SilentAim.Prediction))
+                    elseif typeof(v) == "Ray" then
+                        -- This is likely a ray for raycasting
+                        args[i] = Ray.new(Camera.CFrame.Position, (hitPart.Position + (hitPart.Velocity * getgenv().SilentAim.Prediction) - Camera.CFrame.Position).Unit * 2000)
+                    end
+                end
+                
+                return oldNamecall(self, unpack(args))
+            end
+        end
+    end
+    
+    return oldNamecall(self, ...)
+end)
+
+-- Additional hook for FindPartOnRayWithIgnoreList to improve silent aim effectiveness
+local oldIndex = nil
+oldIndex = hookmetamethod(game, "__index", function(self, index)
+    if getgenv().SilentAim.Enabled and index == "FindPartOnRayWithIgnoreList" and not checkcaller() then
+        local closestPlayer = GetClosestPlayerToMouseSilent()
+        if closestPlayer and closestPlayer.Character then
+            local hitPart = closestPlayer.Character:FindFirstChild(getgenv().SilentAim.HitPart) or closestPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hitPart then
+                return function(_, ray, ignore)
+                    -- Create a new ray pointing at the target
+                    local newRay = Ray.new(ray.Origin, (hitPart.Position + (hitPart.Velocity * getgenv().SilentAim.Prediction) - ray.Origin).Unit * 2000)
+                    return oldIndex(self, index)(self, newRay, ignore)
+                end
+            end
+        end
+    end
+    return oldIndex(self, index)
+end)
+
+-- Print completion message
+print("Enhanced Evade Script loaded successfully!")
+print("Added features: Improved silent aim, walk speed, fixed trigger bot, FOV toggle")
