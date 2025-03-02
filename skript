@@ -1,18 +1,39 @@
--- Load required libraries
+-- Load required libraries with error handling
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local AimbotScript = loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/Aimbot-V2/main/Resources/Scripts/Raw%20Main.lua"))()
+local success, AimbotScript
+success, AimbotScript = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/Aimbot-V2/main/Resources/Scripts/Raw%20Main.lua"))()
+end)
+if not success then
+    warn("Failed to load Aimbot script. Using fallback implementation.")
+    AimbotScript = {} -- Fallback implementation
+end
 
--- ESP Fix: Load the ESP library
-local ESP = loadstring(game:HttpGet("https://kiriot22.com/releases/ESP.lua"))()
-ESP:Toggle(false)
-ESP.Boxes = false
-ESP.Names = false
-ESP.Tracers = false
-ESP.TeamColor = false
+-- ESP Fix: Load the ESP library with error handling
+local ESP
+success, ESP = pcall(function()
+    return loadstring(game:HttpGet("https://kiriot22.com/releases/ESP.lua"))()
+end)
+if not success then
+    warn("Failed to load ESP library. Using fallback implementation.")
+    ESP = {
+        Toggle = function(state) end,
+        Boxes = false,
+        Names = false,
+        Tracers = false,
+        TeamColor = false
+    }
+else
+    ESP:Toggle(false)
+    ESP.Boxes = false
+    ESP.Names = false
+    ESP.Tracers = false
+    ESP.TeamColor = false
+end
 
 -- Initialize Window with black and red theme
 local Window = Fluent:CreateWindow({
-    Title = "Evade" .. Fluent.Version,
+    Title = "Evade" .. (Fluent.Version or ""),
     SubTitle = "Enhanced UI Experience",
     TabWidth = 170,
     Size = UDim2.fromOffset(650, 520),
@@ -343,7 +364,9 @@ Tabs.Visuals:AddSlider("CameraFOV", {
     Max = 120,
     Rounding = 0,
     Callback = function(value)
-        game:GetService("Workspace").CurrentCamera.FieldOfView = value
+        pcall(function()
+            game:GetService("Workspace").CurrentCamera.FieldOfView = value
+        end)
     end
 })
 
@@ -360,9 +383,11 @@ Tabs.Player:AddToggle("SpeedHackToggle", {
                 Duration = 2,
             })
         else
-            if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
-                game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
-            end
+            pcall(function()
+                if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+                    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+                end
+            end)
         end
     end
 })
@@ -391,9 +416,11 @@ Tabs.Player:AddToggle("JumpHackToggle", {
                 Duration = 2,
             })
         else
-            if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
-                game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
-            end
+            pcall(function()
+                if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+                    game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
+                end
+            end)
         end
     end
 })
@@ -413,9 +440,11 @@ Tabs.Player:AddSlider("JumpMultiplier", {
 Tabs.Player:AddButton({
     Title = "Instant Respawn",
     Callback = function()
-        if game.Players.LocalPlayer.Character then
-            game.Players.LocalPlayer.Character:BreakJoints()
-        end
+        pcall(function()
+            if game.Players.LocalPlayer.Character then
+                game.Players.LocalPlayer.Character:BreakJoints()
+            end
+        end)
     end
 })
 
@@ -462,7 +491,9 @@ Tabs.ESP:AddToggle("ESPToggle", {
     Title = "Enable ESP",
     Default = false,
     Callback = function(state)
-        ESP:Toggle(state)
+        pcall(function() 
+            ESP:Toggle(state) 
+        end)
     end
 })
 
@@ -470,7 +501,9 @@ Tabs.ESP:AddToggle("ESPBoxes", {
     Title = "Show Boxes",
     Default = false,
     Callback = function(state)
-        ESP.Boxes = state
+        pcall(function() 
+            ESP.Boxes = state 
+        end)
     end
 })
 
@@ -478,7 +511,9 @@ Tabs.ESP:AddToggle("ESPNames", {
     Title = "Show Names",
     Default = false,
     Callback = function(state)
-        ESP.Names = state
+        pcall(function() 
+            ESP.Names = state 
+        end)
     end
 })
 
@@ -486,7 +521,9 @@ Tabs.ESP:AddToggle("ESPTracers", {
     Title = "Show Tracers",
     Default = false,
     Callback = function(state)
-        ESP.Tracers = state
+        pcall(function() 
+            ESP.Tracers = state 
+        end)
     end
 })
 
@@ -494,7 +531,9 @@ Tabs.ESP:AddColorpicker("ESPColor", {
     Title = "ESP Color",
     Default = Color3.fromRGB(255, 0, 0),
     Callback = function(value)
-        ESP.Color = value
+        pcall(function() 
+            ESP.Color = value 
+        end)
     end
 })
 
@@ -502,14 +541,18 @@ Tabs.ESP:AddColorpicker("ESPColor", {
 Tabs.Misc:AddButton({
     Title = "Rejoin Game",
     Callback = function()
-        game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
+        pcall(function()
+            game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
+        end)
     end
 })
 
 Tabs.Misc:AddButton({
     Title = "Copy Discord",
     Callback = function()
-        setclipboard("https://discord.gg/evadescript")
+        pcall(function()
+            setclipboard("https://discord.gg/evadescript")
+        end)
         Fluent:Notify({
             Title = "Discord Link Copied",
             Content = "Discord link has been copied to clipboard!",
@@ -523,7 +566,9 @@ Tabs.UI:AddColorpicker("BackgroundColor", {
     Title = "Background Color",
     Default = Color3.fromRGB(15, 15, 15),
     Callback = function(value)
-        Fluent:SetThemeColor("Background", value)
+        pcall(function()
+            Fluent:SetThemeColor("Background", value)
+        end)
     end
 })
 
@@ -531,81 +576,40 @@ Tabs.UI:AddColorpicker("AccentColor", {
     Title = "Accent Color",
     Default = Color3.fromRGB(255, 0, 0),
     Callback = function(value)
-        Fluent:SetThemeColor("Accent", value)
+        pcall(function()
+            Fluent:SetThemeColor("Accent", value)
+        end)
     end
 })
 
--- Silent Aim Implementation - FIXED to not miss shots
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-local Camera = workspace.CurrentCamera
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
+-- Create Silent Aim FOV circle with error handling
+local SilentAimCircle
+success, SilentAimCircle = pcall(function()
+    local circle = Drawing.new("Circle")
+    circle.Visible = getgenv().SilentAim.ShowFOV and getgenv().SilentAim.Enabled
+    circle.Radius = getgenv().SilentAim.FOV
+    circle.Color = getgenv().SilentAim.FOVColor
+    circle.Thickness = 1
+    circle.Filled = false
+    circle.Transparency = 1
+    return circle
+end)
 
--- Create Silent Aim FOV circle
-local SilentAimCircle = Drawing.new("Circle")
-SilentAimCircle.Visible = getgenv().SilentAim.ShowFOV and getgenv().SilentAim.Enabled
-SilentAimCircle.Radius = getgenv().SilentAim.FOV
-SilentAimCircle.Color = getgenv().SilentAim.FOVColor
-SilentAimCircle.Thickness = 1
-SilentAimCircle.Filled = false
-SilentAimCircle.Transparency = 1
+if not success then
+    warn("Failed to create FOV circle. Drawing library may not be supported.")
+    SilentAimCircle = {
+        Visible = false,
+        Position = Vector2.new(0, 0),
+        Radius = 0,
+        Color = Color3.fromRGB(255, 0, 0)
+    }
+end
 
 -- Variables for target lock feature
 local LockedTarget = nil
 local LockedHitPart = nil
 
--- Update FOV circle position on each frame and handle other features
-RunService.RenderStepped:Connect(function()
-    -- Update Silent Aim FOV Circle
-    if SilentAimCircle then
-        SilentAimCircle.Position = Vector2.new(Mouse.X, Mouse.Y + 36)
-        SilentAimCircle.Radius = getgenv().SilentAim.FOV
-        SilentAimCircle.Visible = getgenv().SilentAim.ShowFOV and getgenv().SilentAim.Enabled
-        SilentAimCircle.Color = getgenv().SilentAim.FOVColor
-    end
-    
-    -- Handle Speed Hack
-    if getgenv().Movement.SpeedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.WalkSpeed = 16 * getgenv().Movement.SpeedMultiplier
-    end
-    
-    -- Handle Jump Hack
-    if getgenv().Movement.JumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.JumpPower = 50 * getgenv().Movement.JumpMultiplier
-    end
-    
-    -- Handle Anti-Aim (spinning)
-    if getgenv().AntiAim.Enabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local currentTime = tick()
-        local angle = (currentTime * getgenv().AntiAim.SpinSpeed) % (2 * math.pi)
-        
-        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(
-            LocalPlayer.Character.HumanoidRootPart.Position
-        ) * CFrame.Angles(0, angle, 0) * CFrame.Angles(getgenv().AntiAim.YawOffset, 0, 0)
-    end
-    
-    -- Update locked target if target lock is enabled
-    if getgenv().SilentAim.Enabled and getgenv().SilentAim.TargetLock then
-        if not LockedTarget or not LockedTarget.Character or not LockedTarget.Character:FindFirstChild("Humanoid") or LockedTarget.Character.Humanoid.Health <= 0 then
-            LockedTarget = GetClosestPlayerToMouseSilent()
-            if LockedTarget and LockedTarget.Character then
-                if getgenv().SilentAim.HitPart == "Random" then
-                    local parts = {"Head", "UpperTorso", "LowerTorso", "LeftUpperArm", "RightUpperArm", "LeftLowerLeg", "RightLowerLeg"}
-                    LockedHitPart = LockedTarget.Character:FindFirstChild(parts[math.random(1, #parts)]) or LockedTarget.Character:FindFirstChild("HumanoidRootPart")
-                else
-                    LockedHitPart = LockedTarget.Character:FindFirstChild(getgenv().SilentAim.HitPart) or LockedTarget.Character:FindFirstChild("HumanoidRootPart")
-                end
-            end
-        end
-    else
-        LockedTarget = nil
-        LockedHitPart = nil
-    end
-end)
-
--- Improved Get closest player function for Silent Aim
+-- GetClosestPlayerToMouseSilent function with error handling
 local function GetClosestPlayerToMouseSilent()
     local Target = nil
     local MaxDistance = getgenv().SilentAim.FOV
@@ -615,38 +619,113 @@ local function GetClosestPlayerToMouseSilent()
         return nil
     end
     
-    for _, Player in pairs(Players:GetPlayers()) do
-        if Player ~= LocalPlayer then
-            if not getgenv().SilentAim.TeamCheck or Player.Team ~= LocalPlayer.Team then
-                local Character = Player.Character
-                if Character and Character:FindFirstChild("Humanoid") and Character.Humanoid.Health > 0 and Character:FindFirstChild("HumanoidRootPart") then
-                    local HitPart = Character:FindFirstChild(getgenv().SilentAim.HitPart) or Character:FindFirstChild("HumanoidRootPart")
-                    if HitPart then
-                        local ScreenPoint = Camera:WorldToScreenPoint(HitPart.Position)
-                        local VectorDistance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
-                        
-                        if VectorDistance < MaxDistance then
-                            if getgenv().SilentAim.WallCheck then
-                                -- Simple wall check with increased raycast
-                                local ray = Ray.new(Camera.CFrame.Position, (HitPart.Position - Camera.CFrame.Position).Unit * 2000)
-                                local hit, hitPosition = workspace:FindPartOnRayWithIgnoreList(ray, {Character, LocalPlayer.Character})
-                                if hit and hit:IsDescendantOf(Character) then
+    pcall(function()
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        local Mouse = LocalPlayer:GetMouse()
+        local Camera = workspace.CurrentCamera
+        
+        for _, Player in pairs(Players:GetPlayers()) do
+            if Player ~= LocalPlayer then
+                if not getgenv().SilentAim.TeamCheck or Player.Team ~= LocalPlayer.Team then
+                    local Character = Player.Character
+                    if Character and Character:FindFirstChild("Humanoid") and Character.Humanoid.Health > 0 and Character:FindFirstChild("HumanoidRootPart") then
+                        local HitPart = Character:FindFirstChild(getgenv().SilentAim.HitPart) or Character:FindFirstChild("HumanoidRootPart")
+                        if HitPart then
+                            local ScreenPoint = Camera:WorldToScreenPoint(HitPart.Position)
+                            local VectorDistance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+                            
+                            if VectorDistance < MaxDistance then
+                                if getgenv().SilentAim.WallCheck then
+                                    -- Simple wall check with increased raycast
+                                    local ray = Ray.new(Camera.CFrame.Position, (HitPart.Position - Camera.CFrame.Position).Unit * 2000)
+                                    local hit, hitPosition = workspace:FindPartOnRayWithIgnoreList(ray, {Character, LocalPlayer.Character})
+                                    if hit and hit:IsDescendantOf(Character) then
+                                        MaxDistance = VectorDistance
+                                        Target = Player
+                                    end
+                                else
                                     MaxDistance = VectorDistance
                                     Target = Player
                                 end
-                            else
-                                MaxDistance = VectorDistance
-                                Target = Player
                             end
                         end
                     end
                 end
             end
         end
-    end
+    end)
     
     return Target
 end
+
+-- Update FOV circle position on each frame and handle other features
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local Camera = workspace.CurrentCamera
+
+-- Safe RunService connection with error handling
+pcall(function()
+    RunService.RenderStepped:Connect(function()
+        -- Update Silent Aim FOV Circle
+        pcall(function()
+            if SilentAimCircle then
+                SilentAimCircle.Position = Vector2.new(Mouse.X, Mouse.Y + 36)
+                SilentAimCircle.Radius = getgenv().SilentAim.FOV
+                SilentAimCircle.Visible = getgenv().SilentAim.ShowFOV and getgenv().SilentAim.Enabled
+                SilentAimCircle.Color = getgenv().SilentAim.FOVColor
+            end
+        end)
+        
+        -- Handle Speed Hack
+        pcall(function()
+            if getgenv().Movement.SpeedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                LocalPlayer.Character.Humanoid.WalkSpeed = 16 * getgenv().Movement.SpeedMultiplier
+            end
+        end)
+        
+        -- Handle Jump Hack
+        pcall(function()
+            if getgenv().Movement.JumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                LocalPlayer.Character.Humanoid.JumpPower = 50 * getgenv().Movement.JumpMultiplier
+            end
+        end)
+        
+        -- Handle Anti-Aim (spinning)
+        pcall(function()
+            if getgenv().AntiAim.Enabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local currentTime = tick()
+                local angle = (currentTime * getgenv().AntiAim.SpinSpeed) % (2 * math.pi)
+                
+                LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(
+                    LocalPlayer.Character.HumanoidRootPart.Position
+                ) * CFrame.Angles(0, angle, 0) * CFrame.Angles(getgenv().AntiAim.YawOffset, 0, 0)
+            end
+        end)
+        
+        -- Update locked target if target lock is enabled
+        pcall(function()
+            if getgenv().SilentAim.Enabled and getgenv().SilentAim.TargetLock then
+                if not LockedTarget or not LockedTarget.Character or not LockedTarget.Character:FindFirstChild("Humanoid") or LockedTarget.Character.Humanoid.Health <= 0 then
+                    LockedTarget = GetClosestPlayerToMouseSilent()
+                    if LockedTarget and LockedTarget.Character then
+                        if getgenv().SilentAim.HitPart == "Random" then
+                            local parts = {"Head", "UpperTorso", "LowerTorso", "LeftUpperArm", "RightUpperArm", "LeftLowerLeg", "RightLowerLeg"}
+                            LockedHitPart = LockedTarget.Character:FindFirstChild(parts[math.random(1, #parts)]) or LockedTarget.Character:FindFirstChild("HumanoidRootPart")
+                        else
+                            LockedHitPart = LockedTarget.Character:FindFirstChild(getgenv().SilentAim.HitPart) or LockedTarget.Character:FindFirstChild("HumanoidRootPart")
+                        end
+                    end
+                end
+            else
+                LockedTarget = nil
+                LockedHitPart = nil
+            end
+        end)
+    end)
+end)
 
 -- FIXED TriggerBot implementation with direct mouse control
 local TriggerBotRunning = false
@@ -654,114 +733,75 @@ local function TriggerBotCheck()
     if TriggerBotRunning or not getgenv().TriggerBot.Enabled then return end
     TriggerBotRunning = true
     
-    local Target = Mouse.Target
-    if Target and Target.Parent then
-        local Player = Players:GetPlayerFromCharacter(Target.Parent)
-        if Player and Player ~= LocalPlayer then
-            if not getgenv().TriggerBot.TeamCheck or Player.Team ~= LocalPlayer.Team then
-                task.wait(getgenv().TriggerBot.Delay)
-                mouse1press()
-                task.wait(getgenv().TriggerBot.HoldTime)
-                mouse1release()
+    pcall(function()
+        local Target = Mouse.Target
+        if Target and Target.Parent then
+            local Player = Players:GetPlayerFromCharacter(Target.Parent)
+            if Player and Player ~= LocalPlayer then
+                if not getgenv().TriggerBot.TeamCheck or Player.Team ~= LocalPlayer.Team then
+                    task.wait(getgenv().TriggerBot.Delay)
+                    -- Check if mouse1press is available, otherwise use alternative
+                    if mouse1press then
+                        mouse1press()
+                        task.wait(getgenv().TriggerBot.HoldTime)
+                        mouse1release()
+                    else
+                        -- Alternative implementation if mouse1press not available
+                        local VirtualUser = game:GetService("VirtualUser")
+                        VirtualUser:Button1Down(Vector2.new(Mouse.X, Mouse.Y))
+                        task.wait(getgenv().TriggerBot.HoldTime)
+                        VirtualUser:Button1Up(Vector2.new(Mouse.X, Mouse.Y))
+                    end
+                end
             end
         end
-    end
+    end)
     
     task.wait(0.05) -- Short cooldown to prevent excessive firing
     TriggerBotRunning = false
 end
 
--- Connect TriggerBot to mouse movement
-Mouse.Move:Connect(function()
-    if getgenv().TriggerBot.Enabled then
-        TriggerBotCheck()
-    end
+-- Connect TriggerBot to mouse movement with error handling
+pcall(function()
+    Mouse.Move:Connect(function()
+        if getgenv().TriggerBot.Enabled then
+            TriggerBotCheck()
+        end
+    end)
 end)
 
 -- FIXED Silent Aim Hook - Improved to not miss shots
-local oldNamecall
-oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-    local args = {...}
-    local method = getnamecallmethod()
-    
-    if getgenv().SilentAim.Enabled and (method == "FireServer" or method == "InvokeServer" or method == "FindPartOnRayWithIgnoreList") and self.Name:match("Remote") then
-        local targetPlayer = nil
-        local targetHitPart = nil
+pcall(function()
+    local oldNamecall
+    oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+        local args = {...}
+        local method = getnamecallmethod()
         
-        -- Use locked target if available, otherwise get closest player
-        if getgenv().SilentAim.TargetLock and LockedTarget and LockedHitPart then
-            targetPlayer = LockedTarget
-            targetHitPart = LockedHitPart
-        else
-            targetPlayer = GetClosestPlayerToMouseSilent()
-            if targetPlayer and targetPlayer.Character then
-                if getgenv().SilentAim.HitPart == "Random" then
-                    local parts = {"Head", "UpperTorso", "LowerTorso", "LeftUpperArm", "RightUpperArm", "LeftLowerLeg", "RightLowerLeg"}
-                    targetHitPart = targetPlayer.Character:FindFirstChild(parts[math.random(1, #parts)]) or targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-                else
-                    targetHitPart = targetPlayer.Character:FindFirstChild(getgenv().SilentAim.HitPart) or targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-                end
-            end
-        end
-        
-        if targetPlayer and targetHitPart then
-            -- Modify arguments to target the hitPart with improved precision
-            for i, v in pairs(args) do
-                if typeof(v) == "Vector3" then
-                    -- More accurate prediction
-                    args[i] = targetHitPart.Position + (targetHitPart.Velocity * getgenv().SilentAim.Prediction)
-                elseif typeof(v) == "CFrame" then
-                    args[i] = CFrame.new(v.Position, targetHitPart.Position + (targetHitPart.Velocity * getgenv().SilentAim.Prediction))
-                elseif typeof(v) == "Ray" then
-                    -- Improved ray accuracy
-                    local direction = (targetHitPart.Position + (targetHitPart.Velocity * getgenv().SilentAim.Prediction) - Camera.CFrame.Position)
-                    args[i] = Ray.new(Camera.CFrame.Position, direction.Unit * 2000)
+        if getgenv().SilentAim.Enabled and (method == "FireServer" or method == "InvokeServer" or method == "FindPartOnRayWithIgnoreList") and self.Name and self.Name:match("Remote") then
+            local targetPlayer = nil
+            local targetHitPart = nil
+            
+            -- Use locked target if available, otherwise get closest player
+            if getgenv().SilentAim.TargetLock and LockedTarget and LockedHitPart then
+                targetPlayer = LockedTarget
+                targetHitPart = LockedHitPart
+            else
+                targetPlayer = GetClosestPlayerToMouseSilent()
+                if targetPlayer and targetPlayer.Character then
+                    if getgenv().SilentAim.HitPart == "Random" then
+                        local parts = {"Head", "UpperTorso", "LowerTorso", "LeftUpperArm", "RightUpperArm", "LeftLowerLeg", "RightLowerLeg"}
+                        targetHitPart = targetPlayer.Character:FindFirstChild(parts[math.random(1, #parts)]) or targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    else
+                        targetHitPart = targetPlayer.Character:FindFirstChild(getgenv().SilentAim.HitPart) or targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    end
                 end
             end
             
-            return oldNamecall(self, unpack(args))
-        end
-    end
-    
-    return oldNamecall(self, ...)
-end)
-
--- Additional hook for improved silent aim
-local oldIndex = nil
-oldIndex = hookmetamethod(game, "__index", function(self, index)
-    if getgenv().SilentAim.Enabled and index == "FindPartOnRayWithIgnoreList" and not checkcaller() then
-        local targetPlayer = nil
-        local targetHitPart = nil
-        
-        -- Use locked target if available, otherwise get closest player
-        if getgenv().SilentAim.TargetLock and LockedTarget and LockedHitPart then
-            targetPlayer = LockedTarget
-            targetHitPart = LockedHitPart
-        else
-            targetPlayer = GetClosestPlayerToMouseSilent()
-            if targetPlayer and targetPlayer.Character then
-                if getgenv().SilentAim.HitPart == "Random" then
-                    local parts = {"Head", "UpperTorso", "LowerTorso", "LeftUpperArm", "RightUpperArm", "LeftLowerLeg", "RightLowerLeg"}
-                    targetHitPart = targetPlayer.Character:FindFirstChild(parts[math.random(1, #parts)]) or targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-                else
-                    targetHitPart = targetPlayer.Character:FindFirstChild(getgenv().SilentAim.HitPart) or targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-                end
-            end
-        end
-        
-        if targetPlayer and targetHitPart then
-            return function(_, ray, ignore)
-                -- Create a more accurate ray pointing at the target
-                local direction = (targetHitPart.Position + (targetHitPart.Velocity * getgenv().SilentAim.Prediction) - ray.Origin)
-                local newRay = Ray.new(ray.Origin, direction.Unit * 2000)
-                return oldIndex(self, index)(self, newRay, ignore)
-            end
-        end
-    end
-    return oldIndex(self, index)
-end)
-
--- Print completion message
-print("Enhanced Evade Script loaded successfully!")
-print("Fixed silent aim, trigger bot, and added PvP features!")
-</antArtif
+            if targetPlayer and targetHitPart then
+                -- Modify arguments to target the hitPart with improved precision
+                for i, v in pairs(args) do
+                    if typeof(v) == "Vector3" then
+                        -- More accurate prediction
+                        args[i] = targetHitPart.Position + (targetHitPart.Velocity * getgenv().SilentAim.Prediction)
+                    elseif typeof(v) == "CFrame" then
+                        args[i] = CFrame.
