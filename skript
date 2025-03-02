@@ -41,8 +41,10 @@ getgenv().SilentAim = {
     HitPart = "Head",
     TeamCheck = false,
     WallCheck = false,
-    Prediction = 0.185, -- Increased prediction for better hit rate
-    HitChance = 100 -- Added 100% hit chance for reliable targeting
+    Prediction = 0.185, -- Default prediction value
+    AutoPrediction = false, -- New auto prediction feature
+    HitChance = 100,
+    UsePrediction = true -- New toggle for enabling/disabling prediction
 }
 
 -- Define Trigger Bot Settings - Improved reliability
@@ -50,7 +52,11 @@ getgenv().TriggerBot = {
     Enabled = false,
     Delay = 0.1,
     TeamCheck = false,
-    HoldTime = 0.1 -- Added hold time for more reliable triggering
+    HoldTime = 0.1,
+    TargetPart = "Head", -- Added target part selection for trigger bot
+    Randomize = false, -- Added randomized timing
+    MinDelay = 0.05, -- Minimum random delay
+    MaxDelay = 0.2 -- Maximum random delay
 }
 
 -- Define Movement Settings
@@ -252,7 +258,36 @@ Tabs.SilentAim:AddSlider("SilentAimPrediction", {
     end
 })
 
--- TriggerBot Tab - Fixed implementation
+-- NEW: Added toggle for prediction
+Tabs.SilentAim:AddButton({
+    Title = "Toggle Prediction",
+    Callback = function()
+        getgenv().SilentAim.UsePrediction = not getgenv().SilentAim.UsePrediction
+        Fluent:Notify({
+            Title = "Prediction",
+            Content = getgenv().SilentAim.UsePrediction and "Prediction is now enabled" or "Prediction is now disabled",
+            Duration = 2,
+        })
+    end
+})
+
+-- NEW: Added toggle for auto prediction
+Tabs.SilentAim:AddToggle("AutoPredictionToggle", {
+    Title = "Auto Prediction",
+    Default = false,
+    Callback = function(state)
+        getgenv().SilentAim.AutoPrediction = state
+        if state then
+            Fluent:Notify({
+                Title = "Auto Prediction",
+                Content = "Prediction will adjust based on ping",
+                Duration = 2,
+            })
+        end
+    end
+})
+
+-- TriggerBot Tab - Enhanced implementation
 Tabs.TriggerBot:AddToggle("TriggerBotToggle", {
     Title = "Enable Trigger Bot",
     Default = false,
@@ -288,6 +323,49 @@ Tabs.TriggerBot:AddToggle("TriggerBotTeamCheck", {
     Default = false,
     Callback = function(state)
         getgenv().TriggerBot.TeamCheck = state
+    end
+})
+
+-- NEW: Added target part dropdown for trigger bot
+Tabs.TriggerBot:AddDropdown("TriggerBotPart", {
+    Title = "Target Part",
+    Values = {"Head", "Torso", "Any"},
+    Multi = false,
+    Default = "Head",
+    Callback = function(value)
+        getgenv().TriggerBot.TargetPart = value
+    end
+})
+
+-- NEW: Added randomized delay toggle for trigger bot
+Tabs.TriggerBot:AddToggle("TriggerBotRandomize", {
+    Title = "Randomize Timing",
+    Default = false,
+    Callback = function(state)
+        getgenv().TriggerBot.Randomize = state
+    end
+})
+
+-- NEW: Added min/max delay range for randomized trigger bot
+Tabs.TriggerBot:AddSlider("TriggerBotMinDelay", {
+    Title = "Min Random Delay",
+    Default = 0.05,
+    Min = 0,
+    Max = 0.5,
+    Rounding = 2,
+    Callback = function(value)
+        getgenv().TriggerBot.MinDelay = value
+    end
+})
+
+Tabs.TriggerBot:AddSlider("TriggerBotMaxDelay", {
+    Title = "Max Random Delay",
+    Default = 0.2,
+    Min = 0.1,
+    Max = 1,
+    Rounding = 2,
+    Callback = function(value)
+        getgenv().TriggerBot.MaxDelay = value
     end
 })
 
@@ -456,6 +534,7 @@ local Mouse = LocalPlayer:GetMouse()
 local Camera = workspace.CurrentCamera
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local Stats = game:GetService("Stats") -- For ping detection
 
 -- Create Silent Aim FOV circle
 local SilentAimCircle = Drawing.new("Circle")
@@ -466,8 +545,36 @@ SilentAimCircle.Thickness = 1
 SilentAimCircle.Filled = false
 SilentAimCircle.Transparency = 1
 
+-- NEW: Auto Prediction function based on ping
+local function UpdatePrediction()
+    if getgenv().SilentAim.AutoPrediction then
+        local ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+        
+        if ping < 20 then
+            getgenv().SilentAim.Prediction = 0.125
+        elseif ping < 40 then
+            getgenv().SilentAim.Prediction = 0.155
+        elseif ping < 60 then
+            getgenv().SilentAim.Prediction = 0.185
+        elseif ping < 80 then
+            getgenv().SilentAim.Prediction = 0.215
+        elseif ping < 100 then
+            getgenv().SilentAim.Prediction = 0.245
+        elseif ping < 150 then
+            getgenv().SilentAim.Prediction = 0.275
+        elseif ping < 200 then
+            getgenv().SilentAim.Prediction = 0.305
+        else
+            getgenv().SilentAim.Prediction = 0.335
+        end
+    end
+end
+
 -- Update FOV circle position on each frame
 RunService.RenderStepped:Connect(function()
+    -- Update Auto Prediction
+    UpdatePrediction()
+    
     -- Update Silent Aim FOV Circle
     if SilentAimCircle then
         SilentAimCircle.Position = Vector2.new(Mouse.X, Mouse.Y + 36)
@@ -482,7 +589,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- IMPROVED SILENT AIM IMPLEMENTATION FROM PASTE-2.TXT
 -- Improved GetClosestPlayerToMouseSilent function with fixed distance calculation and wall check logic
 local function GetClosestPlayerToMouseSilent()
     local Target = nil
@@ -529,7 +635,7 @@ local function GetClosestPlayerToMouseSilent()
     return Target
 end
 
--- Improved TriggerBot implementation with better timing and state handling
+-- Improved TriggerBot implementation with better timing and part checking
 local TriggerBotRunning = false
 local function TriggerBotCheck()
     if TriggerBotRunning or not getgenv().TriggerBot.Enabled then return end
@@ -541,11 +647,22 @@ local function TriggerBotCheck()
             local Player = Players:GetPlayerFromCharacter(Target.Parent)
             if Player and Player ~= LocalPlayer then
                 if not getgenv().TriggerBot.TeamCheck or Player.Team ~= LocalPlayer.Team then
-                    -- Wait specified delay then click
-                    task.wait(getgenv().TriggerBot.Delay)
-                    mouse1press()
-                    task.wait(getgenv().TriggerBot.HoldTime)
-                    mouse1release()
+                    -- Check if we're targeting the correct part
+                    if getgenv().TriggerBot.TargetPart == "Any" or Target.Name == getgenv().TriggerBot.TargetPart or 
+                      (getgenv().TriggerBot.TargetPart == "Torso" and (Target.Name == "UpperTorso" or Target.Name == "LowerTorso")) then
+                        
+                        -- Calculate delay based on randomization settings
+                        local delay = getgenv().TriggerBot.Delay
+                        if getgenv().TriggerBot.Randomize then
+                            delay = math.random(getgenv().TriggerBot.MinDelay * 100, getgenv().TriggerBot.MaxDelay * 100) / 100
+                        end
+                        
+                        -- Wait specified delay then click
+                        task.wait(delay)
+                        mouse1press()
+                        task.wait(getgenv().TriggerBot.HoldTime)
+                        mouse1release()
+                    end
                 end
             end
         end
@@ -563,7 +680,7 @@ Mouse.Move:Connect(function()
     end
 end)
 
--- Improved Silent Aim Hook with better hit registration
+-- Improved Silent Aim Hook with better hit registration and prediction toggle
 local oldNamecall
 oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     local args = {...}
@@ -582,11 +699,14 @@ oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
             end
             
             if hitPart then
+                -- Apply prediction only if enabled
+                local predictionValue = getgenv().SilentAim.UsePrediction and getgenv().SilentAim.Prediction or 0
+                
                 -- Check if this is a raycast-related remote
                 if method == "FindPartOnRayWithIgnoreList" then
                     -- Modify ray to target the player
                     local origin = Camera.CFrame.Position
-                    local direction = (hitPart.Position + (hitPart.Velocity * getgenv().SilentAim.Prediction) - origin).Unit * 2000
+                    local direction = (hitPart.Position + (hitPart.Velocity * predictionValue) - origin).Unit * 2000
                     return oldNamecall(self, Ray.new(origin, direction), args[2])
                 end
                 
@@ -594,13 +714,13 @@ oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
                 for i, v in pairs(args) do
                     if typeof(v) == "Vector3" then
                         -- Likely a position vector
-                        args[i] = hitPart.Position + (hitPart.Velocity * getgenv().SilentAim.Prediction)
+                        args[i] = hitPart.Position + (hitPart.Velocity * predictionValue)
                     elseif typeof(v) == "CFrame" then
                         -- Likely a CFrame for aiming
-                        args[i] = CFrame.new(v.Position, hitPart.Position + (hitPart.Velocity * getgenv().SilentAim.Prediction))
+                        args[i] = CFrame.new(v.Position, hitPart.Position + (hitPart.Velocity * predictionValue))
                     elseif typeof(v) == "Ray" then
                         -- Directly modify ray
-                        args[i] = Ray.new(v.Origin, (hitPart.Position + (hitPart.Velocity * getgenv().SilentAim.Prediction) - v.Origin).Unit * 2000)
+                        args[i] = Ray.new(v.Origin, (hitPart.Position + (hitPart.Velocity * predictionValue) - v.Origin).Unit * 2000)
                     end
                 end
             end
@@ -619,10 +739,13 @@ oldIndex = hookmetamethod(game, "__index", function(self, index)
         if closestPlayer and closestPlayer.Character then
             local hitPart = closestPlayer.Character:FindFirstChild(getgenv().SilentAim.HitPart) or closestPlayer.Character:FindFirstChild("HumanoidRootPart")
             if hitPart then
+                -- Apply prediction only if enabled
+                local predictionValue = getgenv().SilentAim.UsePrediction and getgenv().SilentAim.Prediction or 0
+                
                 -- Return a modified function that alters the ray
                 return function(_, ray, ignore)
                     local origin = ray.Origin
-                    local predictedPos = hitPart.Position + (hitPart.Velocity * getgenv().SilentAim.Prediction)
+                    local predictedPos = hitPart.Position + (hitPart.Velocity * predictionValue)
                     local direction = (predictedPos - origin).Unit * 2000
                     
                     -- Ensure the ignore list contains both characters
@@ -647,4 +770,4 @@ end)
 
 -- Print completion message
 print("Enhanced Evade Script loaded successfully!")
-print("Added features: Improved silent aim, walk speed, fixed trigger bot, FOV toggle")
+print("Added features: Auto prediction based on ping, Prediction toggle, Enhanced TriggerBot")
