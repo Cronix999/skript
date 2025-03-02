@@ -47,7 +47,7 @@ getgenv().SilentAim = {
     UsePrediction = true
 }
 
--- Define Trigger Bot Settings - Updated with new features
+-- Define Trigger Bot Settings - Fixed to shoot all players
 getgenv().TriggerBot = {
     Enabled = false,
     Delay = 0.01, -- Reduced delay for faster response
@@ -56,11 +56,7 @@ getgenv().TriggerBot = {
     TargetPart = "Any", -- Target any part for better trigger activation
     Randomize = false,
     MinDelay = 0.01, -- Reduced for better response
-    MaxDelay = 0.05,
-    ShootDelay = 0.03, -- NEW: Added shoot delay setting
-    HitboxSize = 1, -- NEW: Added hitbox size multiplier
-    Prediction = 0.13, -- NEW: Added prediction value
-    FastReload = false -- NEW: Added fast reload feature
+    MaxDelay = 0.05
 }
 
 -- Define Movement Settings
@@ -279,7 +275,7 @@ Tabs.SilentAim:AddButton({
     end
 })
 
--- TriggerBot Tab - Updated with new features
+-- TriggerBot Tab - Fixed to shoot all players
 Tabs.TriggerBot:AddToggle("TriggerBotToggle", {
     Title = "Enable Trigger Bot",
     Default = false,
@@ -299,18 +295,6 @@ Tabs.TriggerBot:AddSlider("TriggerBotDelay", {
     end
 })
 
--- NEW: Added Shoot Delay slider
-Tabs.TriggerBot:AddSlider("TriggerBotShootDelay", {
-    Title = "Shoot Delay (seconds)",
-    Default = 0.03,
-    Min = 0,
-    Max = 0.5,
-    Rounding = 2,
-    Callback = function(value)
-        getgenv().TriggerBot.ShootDelay = value
-    end
-})
-
 Tabs.TriggerBot:AddSlider("TriggerBotHoldTime", {
     Title = "Hold Time (seconds)",
     Default = 0.05, -- Reduced hold time
@@ -319,44 +303,6 @@ Tabs.TriggerBot:AddSlider("TriggerBotHoldTime", {
     Rounding = 2,
     Callback = function(value)
         getgenv().TriggerBot.HoldTime = value
-    end
-})
-
--- NEW: Added Hitbox Size slider
-Tabs.TriggerBot:AddSlider("TriggerBotHitboxSize", {
-    Title = "Hitbox Size Multiplier",
-    Default = 1,
-    Min = 1,
-    Max = 5,
-    Rounding = 1,
-    Callback = function(value)
-        getgenv().TriggerBot.HitboxSize = value
-    end
-})
-
--- NEW: Added Prediction slider
-Tabs.TriggerBot:AddSlider("TriggerBotPrediction", {
-    Title = "Prediction",
-    Default = 0.13,
-    Min = 0,
-    Max = 0.5,
-    Rounding = 2,
-    Callback = function(value)
-        getgenv().TriggerBot.Prediction = value
-    end
-})
-
--- NEW: Added Fast Reload toggle
-Tabs.TriggerBot:AddToggle("FastReloadToggle", {
-    Title = "Fast Reload",
-    Default = false,
-    Callback = function(state)
-        getgenv().TriggerBot.FastReload = state
-        Fluent:Notify({
-            Title = "Fast Reload",
-            Content = state and "Fast Reload enabled" or "Fast Reload disabled",
-            Duration = 2,
-        })
     end
 })
 
@@ -648,54 +594,23 @@ local function GetClosestPlayerToMouseSilent()
     return Target
 end
 
--- UPDATED: TriggerBot implementation with enhanced features
+-- FIXED: TriggerBot implementation to shoot all players
 local TriggerBotRunning = false
-local TriggerBotCooldown = false
 local function TriggerBotCheck()
-    if TriggerBotRunning or TriggerBotCooldown or not getgenv().TriggerBot.Enabled then return end
+    if TriggerBotRunning or not getgenv().TriggerBot.Enabled then return end
     TriggerBotRunning = true
     
     task.spawn(function()
-        -- Apply shoot delay
-        task.wait(getgenv().TriggerBot.ShootDelay)
-        
         local Target = Mouse.Target
         if Target and Target.Parent then
             -- Try to find a player from the target
             local Character = Target.Parent
             local Player = Players:GetPlayerFromCharacter(Character)
             
-            -- Enhanced hitbox detection for players
-            if not Player then
-                -- Check if part is within the hitbox size of any character
-                for _, p in pairs(Players:GetPlayers()) do
-                    if p ~= LocalPlayer and p.Character then
-                        for _, part in pairs(p.Character:GetChildren()) do
-                            if part:IsA("BasePart") then
-                                local magnitudeDiff = (part.Position - Target.Position).Magnitude
-                                if magnitudeDiff <= (part.Size.Magnitude/2) * getgenv().TriggerBot.HitboxSize then
-                                    Player = p
-                                    Character = p.Character
-                                    break
-                                end
-                            end
-                        end
-                        if Player then break end
-                    end
-                end
-            end
-            
             -- If it's a player and not yourself
             if Player and Player ~= LocalPlayer then
                 if not getgenv().TriggerBot.TeamCheck or Player.Team ~= LocalPlayer.Team then
-                    -- Add prediction to target position
-                    if Character:FindFirstChild("HumanoidRootPart") and getgenv().TriggerBot.Prediction > 0 then
-                        local hrp = Character:FindFirstChild("HumanoidRootPart")
-                        local predictedPos = hrp.Position + (hrp.Velocity * getgenv().TriggerBot.Prediction)
-                        local screenPos = Camera:WorldToScreenPoint(predictedPos)
-                        mousemoveabs(screenPos.X, screenPos.Y)
-                    end
-                    
+                    -- Simplified to trigger on any part
                     mouse1press()
                     task.wait(getgenv().TriggerBot.HoldTime)
                     mouse1release()
@@ -703,10 +618,8 @@ local function TriggerBotCheck()
             end
         end
         
-        -- Apply cooldown with the delay
-        TriggerBotCooldown = true
-        task.wait(getgenv().TriggerBot.Delay)
-        TriggerBotCooldown = false
+        -- Reset state with minimal cooldown
+        task.wait(0.01)
         TriggerBotRunning = false
     end)
 end
@@ -732,11 +645,6 @@ oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     -- Handle No Bullet Delay
     if getgenv().GunMods.NoBulletDelay and method == "FireServer" and (self.Name == "FireDelay" or self.Name:find("Cooldown")) then
         return nil
-    end
-    
-    -- Handle Fast Reload
-    if getgenv().TriggerBot.FastReload and method == "FireServer" and self.Name == "Reload" then
-        args[1] = 0.1  -- Set reload time to minimum
     end
     
     if getgenv().SilentAim.Enabled and (method == "FireServer" or method == "InvokeServer" or method == "FindPartOnRayWithIgnoreList") then
@@ -788,3 +696,85 @@ oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
                     elseif typeof(v) == "Ray" then
                         -- Direct ray modifications
                         args[i] = Ray.new(v.Origin, (hitPart.Position + (hitPart.Velocity * predictionValue) - v.Origin).Unit * 2000)
+                    end
+                end
+            end
+        end
+    end
+    
+    return oldNamecall(self, unpack(args))
+end)
+
+-- Improved index hook for better silent aim compatibility
+local oldIndex = nil
+oldIndex = hookmetamethod(game, "__index", function(self, index)
+    -- Apply No Recoil
+    if getgenv().GunMods.NoRecoil and (index == "Recoil" or index == "Spread" or index == "Kick") then
+        return 0
+    end
+    
+    -- Apply No Bullet Delay
+    if getgenv().GunMods.NoBulletDelay and (index == "FireDelay" or index:find("Cooldown")) then
+        return 0
+    end
+    
+    -- Only intervene for the specific function we need
+    if getgenv().SilentAim.Enabled and index == "FindPartOnRayWithIgnoreList" and not checkcaller() then
+        local closestPlayer = GetClosestPlayerToMouseSilent()
+        if closestPlayer and closestPlayer.Character then
+            local hitPart = closestPlayer.Character:FindFirstChild(getgenv().SilentAim.HitPart) 
+                         or closestPlayer.Character:FindFirstChild("HumanoidRootPart")
+                         or closestPlayer.Character:FindFirstChild("UpperTorso")
+                         or closestPlayer.Character:FindFirstChild("Head")
+                         
+            if hitPart then
+                -- Apply prediction only if enabled
+                local predictionValue = getgenv().SilentAim.UsePrediction and getgenv().SilentAim.Prediction or 0
+                
+                -- Return a modified function that alters the ray
+                return function(_, ray, ignore)
+                    local origin = ray.Origin
+                    local predictedPos = hitPart.Position + (hitPart.Velocity * predictionValue)
+                    local direction = (predictedPos - origin).Unit * 2000
+                    
+                    -- Ensure the ignore list contains both characters
+                    if typeof(ignore) == "table" then
+                        -- Make a new table to avoid modifying the original
+                        local newIgnore = table.clone(ignore)
+                        -- Add local player character if not already in list
+                        if LocalPlayer.Character and not table.find(newIgnore, LocalPlayer.Character) then
+                            table.insert(newIgnore, LocalPlayer.Character)
+                        end
+                        table.insert(newIgnore, workspace.CurrentCamera)
+                        return oldIndex(self, index)(self, Ray.new(origin, direction), newIgnore)
+                    else
+                        -- If ignore isn't a table, create a new one
+                        return oldIndex(self, index)(self, Ray.new(origin, direction), {LocalPlayer.Character, ignore, workspace.CurrentCamera})
+                    end
+                end
+            end
+        end
+    end
+    
+    return oldIndex(self, index)
+end)
+
+-- Hook __newindex to implement No Recoil at a deeper level
+local oldNewIndex = nil
+oldNewIndex = hookmetamethod(game, "__newindex", function(self, index, value)
+    -- Block recoil-related property changes
+    if getgenv().GunMods.NoRecoil and (index == "Recoil" or index == "Spread" or index == "Kick") then
+        return oldNewIndex(self, index, 0)
+    end
+    
+    -- Block delay-related property changes
+    if getgenv().GunMods.NoBulletDelay and (index == "FireDelay" or index:find("Cooldown")) then
+        return oldNewIndex(self, index, 0)
+    end
+    
+    return oldNewIndex(self, index, value)
+end)
+
+-- Print completion message
+print("Fixed Evade Script loaded successfully!")
+print("Fixed TriggerBot, improved Silent Aim accuracy, added No Recoil and No Bullet Delay")
